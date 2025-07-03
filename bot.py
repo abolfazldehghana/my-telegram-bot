@@ -5,7 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # توکن ربات خود را اینجا قرار دهید. این توکن را از BotFather در تلگرام بگیرید
 # بهتر است این توکن را در جای امنی نگهداری کنید و مستقیم در کد ننویسید
 BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"
-
+7048334360:AAEkI9RiF-vUYvUq6Sg92Q9oiE5OjFAaHok
 # این تابع زمانی اجرا می‌شود که کاربر دستور /start را ارسال کند
 async def start(update: Update, context):
     # ساخت دکمه‌های شیشه‌ای (زیر پیام)
