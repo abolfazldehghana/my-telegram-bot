@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دموی گیمیفای شده - فارکس کیلر</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            touch-action: manipulation;
+        }
+        .main-button-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(22, 163, 74, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+        }
+        .xp-bar-inner, .screen {
+            transition: all 0.5s ease-in-out;
+        }
+        .task-card-enter, .learn-card-enter {
+            animation: item-enter 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes item-enter {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-bg {
+            transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+        .screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center h-screen overflow-hidden">
+
+    <div class="w-full max-w-sm h-full bg-gradient-to-b from-gray-800 to-black text-white relative">
+
+        <!-- Screen 1: Intro -->
+        <div id="intro-screen" class="screen flex flex-col items-center justify-center p-8 text-center">
+            <div class="bg-green-500 text-black rounded-full w-24 h-24 flex items-center justify-center mb-6 shadow-lg">
+                <span class="text-5xl font-extrabold">FK</span>
+            </div>
+            <h1 class="text-4xl font-bold mb-2">فارکس کیلر</h1>
+            <p class="text-gray-300 mb-8">در کمتر از ۶۰ دقیقه، تو را برای ورود به بازار جهانی فارکس آماده می‌کنیم.</p>
+            <button id="start-journey-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-full text-lg transition-transform transform hover:scale-105">
+                سفر را شروع کن
+            </button>
+        </div>
+
+        <!-- Screen 2: Learn -->
+        <div id="learn-screen" class="screen hidden flex flex-col items-center justify-center p-6 text-center">
+            <h1 class="text-3xl font-bold mb-6">فقط چند نکته تا شروع...</h1>
+            <div class="space-y-4 w-full">
+                <div class="learn-card-enter bg-gray-700 p-4 rounded-xl">
+                    <h2 class="font-bold text-lg mb-1">فارکس چیست؟ 📈</h2>
+                    <p class="text-gray-300 text-sm">بازاری جهانی برای خرید و فروش ارز کشورهای مختلف، مثل دلار و یورو.</p>
+                </div>
+                <div class="learn-card-enter bg-gray-700 p-4 rounded-xl" style="animation-delay: 150ms;">
+                    <h2 class="font-bold text-lg mb-1">هدف ما چیست؟ 🎯</h2>
+                    <p class="text-gray-300 text-sm">یادگیری سریع و شروع کسب درآمد دلاری با انجام ماموریت‌های ساده.</p>
+                </div>
+            </div>
+            <button id="start-missions-btn" class="mt-10 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-full text-lg transition-transform transform hover:scale-105">
+                آماده‌ام، ماموریت‌ها را نشان بده
+            </button>
+        </div>
+        
+        <!-- Screen 3: Game UI -->
+        <div id="game-screen" class="screen hidden flex flex-col">
+            <!-- Header -->
+            <header class="p-4 flex flex-col items-center space-y-2 border-b border-gray-700 flex-shrink-0">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <img src="https://placehold.co/40x40/16a34a/ffffff?text=FK" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-green-500">
+                    <div>
+                        <h2 class="font-bold text-lg">معامله‌گر جوان</h2>
+                        <p id="user-level" class="text-sm text-gray-400">سطح ۱ - تازه وارد</p>
+                    </div>
+                </div>
+                <div class="w-full">
+                    <div class="flex justify-between text-xs font-bold mb-1 text-gray-300">
+                        <span>امتیاز</span>
+                        <span id="xp-counter">10 / 80</span>
+                    </div>
+                    <div class="w-full bg-gray-600 rounded-full h-2.5">
+                        <div id="xp-bar" class="bg-gradient-to-r from-green-500 to-emerald-500 h-2.5 rounded-full xp-bar-inner" style="width: 12.5%"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content / Tasks -->
+            <div class="flex-grow relative overflow-hidden">
+                <main id="main-content" class="screen flex p-4 flex-col items-center justify-between">
+                    <div class="text-center">
+                        <h1 class="text-4xl font-bold">سفر مالی شما</h1>
+                        <p class="text-gray-400 mt-1">با انجام ماموریت‌ها، امپراطوری خودت رو بساز!</p>
+                    </div>
+                    <div class="my-8">
+                        <button id="main-button" class="w-48 h-48 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg main-button-pulse border-4 border-green-500">
+                            شروع
+                        </button>
+                    </div>
+                    <div class="w-full text-center">
+                        <p class="text-lg">ماموریت بعدی شما:</p>
+                        <p id="next-mission" class="font-bold text-xl text-yellow-400">دریافت سیگنال تست</p>
+                    </div>
+                </main>
+
+                <div id="tasks-screen" class="screen hidden flex-grow p-4 flex-col overflow-y-auto">
+                    <h1 class="text-2xl font-bold text-center mb-4">📜 ماموریت‌ها</h1>
+                    <div id="tasks-list" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-shrink-0 bg-gray-900 border-t border-gray-700 flex justify-around">
+                <button id="nav-home" class="flex-1 p-4 flex flex-col items-center text-green-400 border-t-2 border-green-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-xs">خانه</span>
+                </button>
+                <button id="nav-tasks" class="flex-1 p-4 flex flex-col items-center text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    <span class="text-xs">ماموریت‌ها</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 items-center justify-center hidden z-50">
+        <div id="modal-content" class="bg-gray-800 text-white rounded-2xl p-6 w-11/12 max-w-md transform scale-95 opacity-0">
+            <h3 id="modal-title" class="text-xl font-bold mb-4"></h3>
+            <div id="modal-body" class="text-gray-300 mb-6"></div>
+            <button id="modal-close" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">فهمیدم</button>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE MANAGEMENT ---
+        const state = { xp: 10, level: 1, /* ... same as before ... */ };
+        state.levels = [
+            { name: "تازه وارد", xp_needed: 0 }, { name: "کارآموز", xp_needed: 80 },
+            { name: "معامله‌گر جوان", xp_needed: 120 }, { name: "تحلیلگر حرفه‌ای", xp_needed: 200 },
+        ];
+        state.tasks = [
+            { id: 'signal', title: 'دریافت سیگنال تست', xp: 20, done: false, modal: { title: '📈 سیگنال تست رایگان', body: '<b>جفت ارز:</b> <code>EUR/USD</code><br><b>نوع:</b> <code>Buy Limit</code><br><b>ورود:</b> <code>1.0750</code><br><b>سود:</b> <code>1.0820</code><br><b>ضرر:</b> <code>1.0710</code>' }},
+            { id: 'register', title: 'افتتاح حساب رایگان', xp: 50, done: false, modal: { title: '🔗 افتتاح حساب', body: 'برای استفاده واقعی از سیگنال‌ها، باید حساب باز کنی. این کار رایگان و سریع است. روی دکمه زیر (در نسخه اصلی) کلیک کن و بعد از اتمام، ماموریت را تکمیل کن.' }},
+            { id: 'tutorial', title: 'دیدن آموزش پرداخت', xp: 20, done: false, modal: { title: '🎬 آموزش واریز تتر', body: 'در این ویدیو یاد می‌گیری چطور به سادگی حسابت رو شارژ کنی.<br><br><div class="bg-black text-white rounded-lg p-10 text-center font-bold text-xl">▶️</div>' }},
+            { id: 'deposit', title: 'شارژ اولیه حساب', xp: 80, done: false, modal: { title: '💰 شارژ حساب', body: 'با اولین واریز (حتی مبلغ کم) قفل پاداش‌های ویژه برای شما باز می‌شود!' }},
+            { id: 'invite', title: 'دعوت یک کاربر جدید', xp: 30, done: false, modal: { title: '🤝 دعوت از دوستان', body: 'با دعوت از هر دوست، 30 امتیاز دریافت کن و سریع‌تر پیشرفت کن.' }},
+        ];
+
+        // --- DOM ELEMENTS ---
+        const introScreen = document.getElementById('intro-screen');
+        const learnScreen = document.getElementById('learn-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const startJourneyBtn = document.getElementById('start-journey-btn');
+        const startMissionsBtn = document.getElementById('start-missions-btn');
+        
+        // Game screen elements
+        const xpCounter = document.getElementById('xp-counter');
+        const xpBar = document.getElementById('xp-bar');
+        const userLevel = document.getElementById('user-level');
+        const tasksList = document.getElementById('tasks-list');
+        const nextMissionEl = document.getElementById('next-mission');
+        const mainContent = document.getElementById('main-content');
+        const tasksScreen = document.getElementById('tasks-screen');
+        const navHome = document.getElementById('nav-home');
+        const navTasks = document.getElementById('nav-tasks');
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalClose = document.getElementById('modal-close');
+
+        // --- UI FUNCTIONS ---
+        function switchScreen(screenToShow) {
+            [introScreen, learnScreen, gameScreen].forEach(screen => {
+                if (screen.id === screenToShow.id) {
+                    screen.classList.remove('hidden');
+                } else {
+                    screen.classList.add('hidden');
+                }
+            });
+        }
+        
+        function updateUI() { /* ... same as before ... */ 
+            const currentLevelInfo = state.levels[state.level - 1];
+            const nextLevelInfo = state.levels[state.level] || { xp_needed: state.xp };
+            const xpForLevel = state.xp - currentLevelInfo.xp_needed;
+            const xpNeededForNextLevel = nextLevelInfo.xp_needed - currentLevelInfo.xp_needed;
+            const percentage = Math.min((xpForLevel / xpNeededForNextLevel) * 100, 100);
+            xpCounter.innerText = `${state.xp} / ${nextLevelInfo.xp_needed}`;
+            xpBar.style.width = `${percentage}%`;
+            userLevel.innerText = `سطح ${state.level} - ${currentLevelInfo.name}`;
+            const nextMission = state.tasks.find(t => !t.done);
+            if (nextMission) {
+                nextMissionEl.innerText = nextMission.title;
+            } else {
+                nextMissionEl.innerText = "شما تمام ماموریت‌ها را انجام داده‌اید!";
+            }
+        }
+
+        function renderTasks() { /* ... same as before ... */
+            tasksList.innerHTML = '';
+            state.tasks.forEach((task, index) => {
+                const taskCard = document.createElement('div');
+                taskCard.className = `task-card-enter bg-gray-700 p-4 rounded-xl flex items-center justify-between shadow-md ${task.done ? 'opacity-50' : ''}`;
+                taskCard.style.animationDelay = `${index * 100}ms`;
+                taskCard.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="bg-gray-800 p-3 rounded-lg mr-4 ml-2">
+                             <span class="text-2xl">${task.done ? '✅' : '🎯'}</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold">${task.title}</h3>
+                            <p class="text-sm text-yellow-400">+${task.xp} امتیاز</p>
+                        </div>
+                    </div>
+                    <button data-task-id="${task.id}" class="task-button ${task.done ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                        ${task.done ? 'انجام شد' : 'شروع'}
+                    </button>
+                `;
+                tasksList.appendChild(taskCard);
+            });
+        }
+        
+        function showModal(task) { /* ... same as before ... */
+            modalTitle.innerText = task.modal.title;
+            modalBody.innerHTML = task.modal.body;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            modalClose.onclick = () => {
+                closeModal();
+                if (!task.done) {
+                    completeTask(task.id);
+                }
+            };
+        }
+
+        function closeModal() { /* ... same as before ... */
+            modal.classList.add('opacity-0');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // --- LOGIC FUNCTIONS ---
+        function addXp(amount) { /* ... same as before ... */
+            state.xp += amount;
+            checkLevelUp();
+            updateUI();
+        }
+        function checkLevelUp() { /* ... same as before ... */
+            const nextLevel = state.level;
+            if (state.levels[nextLevel] && state.xp >= state.levels[nextLevel].xp_needed) {
+                state.level++;
+            }
+        }
+        function completeTask(taskId) { /* ... same as before ... */
+            const task = state.tasks.find(t => t.id === taskId);
+            if (task && !task.done) {
+                task.done = true;
+                addXp(task.xp);
+                renderTasks();
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        startJourneyBtn.addEventListener('click', () => switchScreen(learnScreen));
+        startMissionsBtn.addEventListener('click', () => switchScreen(gameScreen));
+
+        navHome.addEventListener('click', () => {
+            tasksScreen.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            navHome.classList.add('text-green-400', 'border-green-400');
+            navHome.classList.remove('text-gray-400');
+            navTasks.classList.add('text-gray-400');
+            navTasks.classList.remove('text-green-400', 'border-green-400');
+        });
+        navTasks.addEventListener('click', () => {
+            mainContent.classList.add('hidden');
+            tasksScreen.classList.remove('hidden');
+            navTasks.classList.add('text-green-400', 'border-green-400');
+            navTasks.classList.remove('text-gray-400');
+            navHome.classList.add('text-gray-400');
+            navHome.classList.remove('text-green-400', 'border-green-400');
+            renderTasks();
+        });
+        
+        tasksList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('task-button')) {
+                const taskId = e.target.dataset.taskId;
+                const task = state.tasks.find(t => t.id === taskId);
+                if (task && !task.done) {
+                    showModal(task);
+                }
+            }
+        });
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+            switchScreen(introScreen);
+            updateUI();
+        };
+    </script>
+</body>
+</html>
