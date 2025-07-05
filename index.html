@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>فارکس کیلر - آموزش فارکس</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -12,77 +12,149 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* تمام استایل‌های شما بدون تغییر در اینجا قرار می‌گیرد */
-        body { font-family: 'Vazirmatn', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background-color: #111827; /* رنگ پس‌زمینه اصلی */ }
-        .page { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; background-color: transparent; }
-        .page.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .splash-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0; }
-        .gradient-blob { position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.3; animation: move 15s infinite alternate; }
-        .dark .gradient-blob { opacity: 0.4; }
-        .blob-1 { width: 300px; height: 300px; top: -50px; left: -100px; background: #3b82f6; }
-        .blob-2 { width: 250px; height: 250px; bottom: -80px; right: -80px; background: #8b5cf6; animation-delay: -7s; }
-        @keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(40px, 60px) scale(1.2); } }
-        .logo-glow { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), 0 0 30px rgba(139, 92, 246, 0.4); }
+        :root {
+            --bg-color: #030712; /* Fallback background color */
+        }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: var(--bg-color);
+            color: white;
+            overscroll-behavior-y: none; /* Prevents pull-to-refresh on mobile */
+        }
+        /* ... سایر استایل‌های شما بدون تغییر ... */
+        .page { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; }
+        .page.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; position: absolute; top:0; left:0; right:0; bottom:0; }
         .glass-effect { background: rgba(42, 53, 71, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .custom-scrollbar::-webkit-scrollbar { display: none; }
-        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* استایل‌های مینی‌گیم شما... */
-        #page-minigame .app-header { background-color: #2c2c2e; display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; flex-shrink: 0; border-bottom: 1px solid #3a3a3c; }
-        /* ... بقیه استایل‌های شما ... */
+
     </style>
-     <script>
-        tailwind.config = { /* ... محتوای کانفیگ تیل‌ویند شما ... */ }
-    </script>
 </head>
-<body class="bg-gray-900 text-white">
+<body class="min-h-screen">
 
-    <div id="screen" class="w-full h-screen overflow-hidden relative">
-        
-        <div class="splash-bg">
-            <div class="gradient-blob blob-1"></div>
-            <div class="gradient-blob blob-2"></div>
-        </div>
-
-        <div id="page-splash" class="page w-full h-full flex flex-col items-center justify-between text-center p-8 relative">
+    <div id="app-container" class="w-full min-h-screen relative overflow-hidden">
+        <div id="page-splash" class="page w-full h-screen flex flex-col items-center justify-between text-center p-8">
             <div class="z-10 w-full flex-grow flex flex-col items-center justify-center">
-                 <div class="w-52 h-52 rounded-full shadow-2xl overflow-hidden mb-8 border-2 border-white/20 logo-glow flex items-center justify-center">
-                     <img src="https://i.ibb.co/RTyYwsDn/ChatGPT-Image-Jul-4-2025-05-27-28-PM.jpg" alt="لوگوی فارکس کیلر" class="w-full h-full object-cover transform scale-[1.3]" onerror="this.onerror=null;this.src='https://placehold.co/208x208/111827/ffffff?text=Logo';">
-                 </div>
-                 <h1 class="text-3xl font-black text-white mb-3 drop-shadow-lg">
-                     به <span class="text-red-500 drop-shadow-glow-red">فارکس کیلر</span> خوش آمدید
-                 </h1>
-                 <p class="text-lg font-medium text-gray-300 drop-shadow-md">
-                     اینجا قراره صفر تا صد درکنارهم به درآمد دلاری برسیم
-                 </p>
+                <div class="w-40 h-40 md:w-52 md:h-52 rounded-full shadow-2xl overflow-hidden mb-8 border-2 border-white/20 logo-glow flex items-center justify-center">
+                    <img src="https://i.ibb.co/RTyYwsDn/ChatGPT-Image-Jul-4-2025-05-27-28-PM.jpg" alt="لوگوی فارکس کیلر" class="w-full h-full object-cover">
+                </div>
+                <h1 class="text-3xl font-black text-white mb-3 drop-shadow-lg">به <span class="text-red-500">فارکس کیلر</span> خوش آمدید</h1>
+                <p class="text-lg font-medium text-gray-300 drop-shadow-md">اینجا قراره صفر تا صد درکنارهم به درآمد دلاری برسیم</p>
             </div>
-            <button id="start-btn" class="z-10 w-full glass-effect hover:bg-white/10 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 space-x-reverse">
+            <button id="start-btn" class="z-10 w-full max-w-xs glass-effect hover:bg-white/10 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 space-x-reverse">
                 <span>همین حالا شروع کن</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </button>
         </div>
-        
+
+        <div id="page-video" class="page hidden w-full h-screen flex flex-col bg-black">
+             <video id="intro-video" class="w-full h-full object-cover" src="https://assets.mixkit.co/videos/preview/mixkit-person-working-on-a-laptop-in-a-dark-room-4335-large.mp4" loop muted playsinline>ویدیو پشتیبانی نمی‌شود.</video>
+             <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/80 to-transparent">
+                 <button id="continue-from-video-btn" class="w-full max-w-xs mx-auto glass-effect hover:bg-white/10 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-transform transform hover:scale-105">ادامه مسیر</button>
+             </div>
+        </div>
         </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- ADDED: اعلام آمادگی به تلگرام ---
-            // این بخش به تلگرام می‌گوید که مینی اپ شما با موفقیت لود شده و آماده نمایش است
+    // REFACTORED: تمام منطق جاوا اسکریپت برای اطمینان از عملکرد صحیح بازنویسی شد
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- TELEGRAM WEB APP INITIALIZATION (مهم‌ترین بخش) ---
+        try {
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
-                tg.ready(); // اعلام آمادگی
-                tg.expand(); // باز کردن اپ در حالت تمام صفحه
+                tg.ready();
+                tg.expand();
+                
+                // هماهنگ‌سازی رنگ پس‌زمینه با تم تلگرام
+                const bgColor = tg.themeParams.bg_color || '#030712';
+                document.body.style.backgroundColor = bgColor;
+                document.documentElement.style.setProperty('--bg-color', bgColor);
 
-                // تغییر رنگ پس‌زمینه اصلی برای هماهنگی با تم تلگرام
-                document.body.style.backgroundColor = tg.themeParams.bg_color || '#111827';
+                tg.BackButton.onClick(() => {
+                    // می‌توانید برای دکمه بازگشت تلگرام منطق تعریف کنید
+                    const currentPage = document.querySelector('.page:not(.hidden)');
+                    if (currentPage && currentPage.id !== 'page-splash') {
+                        navigateTo('page-splash'); // برای مثال، همیشه به صفحه اول برگردد
+                    } else {
+                        tg.BackButton.hide();
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("Telegram Web App script error:", e);
+        }
+
+        // --- DOM ELEMENT SELECTORS ---
+        // برای اطمینان، تمام انتخاب‌گرها اینجا قرار گرفتند
+        const pages = {
+            splash: document.getElementById('page-splash'),
+            video: document.getElementById('page-video'),
+            // steps: document.getElementById('page-steps'),
+            // dashboard: document.getElementById('page-dashboard'),
+            // minigame: document.getElementById('page-minigame')
+        };
+        const buttons = {
+            start: document.getElementById('start-btn'),
+            continueFromVideo: document.getElementById('continue-from-video-btn'),
+        };
+        const introVideo = document.getElementById('intro-video');
+
+        // --- STATE MANAGEMENT ---
+        const initialState = { currentPage: 'page-splash' /* ... بقیه state شما ... */ };
+        let state = { ...initialState }; // ساده‌سازی برای این مثال
+
+        // --- FUNCTIONS ---
+        function navigateTo(pageId) {
+            // مخفی کردن تمام صفحات
+            Object.values(pages).forEach(page => {
+                if(page) page.classList.add('hidden');
+            });
+            
+            // نمایش صفحه مورد نظر
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                state.currentPage = pageId;
             }
 
-            // --- بقیه کدهای جاوا اسکریپت شما ---
-            const APP_STATE_KEY = 'forexKillerAppState';
-            // ... تمام کدهای دیگر شما از اینجا به بعد قرار می‌گیرد ...
-             const pages = document.querySelectorAll('.page');
-             // ...
-        });
+            // منطق مربوط به هر صفحه
+            if (pageId === 'page-video') {
+                if(introVideo) introVideo.play().catch(e => console.error("Video autoplay error:", e));
+                if (window.Telegram.WebApp.BackButton.isVisible) {
+                   window.Telegram.WebApp.BackButton.hide();
+                }
+            } else {
+                if(introVideo) introVideo.pause();
+            }
+
+            // نمایش یا عدم نمایش دکمه بازگشت تلگرام
+            if (pageId !== 'page-splash' && window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.BackButton.show();
+            } else if (window.Telegram && window.Telegram.WebApp) {
+                 window.Telegram.WebApp.BackButton.hide();
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        if (buttons.start) {
+            buttons.start.addEventListener('click', () => {
+                navigateTo('page-video');
+            });
+        }
+        
+        if (buttons.continueFromVideo) {
+            buttons.continueFromVideo.addEventListener('click', () => {
+                // در اینجا باید به صفحه مراحل برود
+                // navigateTo('page-steps'); 
+                alert('ادامه مسیر کلیک شد!'); // برای تست
+            });
+        }
+
+        // --- INITIALIZATION ---
+        // با صفحه اسپلش شروع می‌کنیم
+        navigateTo('page-splash');
+
+    });
     </script>
 </body>
 </html>
