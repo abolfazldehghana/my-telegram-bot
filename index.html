@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>فارکس کیلر - آموزش فارکس</title>
+    <!-- Telegram WebApp Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -102,7 +104,8 @@
 
     <!-- AUDIO SOURCES -->
     <audio id="trade-sound" src="https://c.mql4.com/book/sounds/ok.wav" preload="auto"></audio>
-    <audio id="notification-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" preload="auto"></audio>
+    <!-- TODO: Add your notification sound URL to the src attribute below -->
+    <audio id="notification-sound" src="" preload="auto"></audio>
     <audio id="select-sound" src="https://cdn.freesound.org/previews/253/253887_4479031-lq.mp3" preload="auto"></audio>
     <audio id="win-sound" src="https://cdn.freesound.org/previews/341/341695_5121236-lq.mp3" preload="auto"></audio>
     <audio id="lose-sound" src="https://cdn.freesound.org/previews/442/442910_9312075-lq.mp3" preload="auto"></audio>
@@ -184,7 +187,7 @@
                     <div id="modal-buttons" class="flex flex-col gap-3"></div>
                 </div>
             </div>
-            <div id="modal-container" class="flex justify-center items-center absolute inset-0 z-50 bg-black bg-opacity-70">
+            <div id="modal-container" class="hidden flex justify-center items-center absolute inset-0 z-50 bg-black bg-opacity-70">
                 <div id="welcome-modal" class="glass-effect p-6 rounded-2xl shadow-xl text-center w-11/12" dir="rtl">
                     <h2 class="text-2xl font-bold mb-4 text-white">به شبیه‌ساز ترید خوش آمدید!</h2>
                     <p class="text-gray-300 mb-6">اینجا قراره باهم تجربه یک ترید واقعی رو داشته باشیم.</p>
@@ -279,10 +282,10 @@
                     points: 0,
                 },
                 mainSteps: [
-                    // FIXED: Using new, reliable icon URLs
-                    { id: 1, title: "آموزش سریع", module: "آموزش", status: 'unlocked', points: 50, iconUrl: "https://static.vecteezy.com/system/resources/previews/010/853/910/original/3d-graduation-cap-icon-png.png" },
-                    { id: 2, title: "انجام ماموریت‌ها", module: "مینی‌گیم", status: 'locked', points: 100, iconUrl: "https://static.vecteezy.com/system/resources/previews/009/419/523/original/3d-game-controller-icon-png.png" },
-                    { id: 3, title: "کسب درآمد", module: "کسب درآمد", status: 'locked', points: 0, iconUrl: "https://static.vecteezy.com/system/resources/previews/024/187/847/original/3d-money-bag-icon-png.png" }
+                    // TODO: Replace placeholders with your desired icon URLs
+                    { id: 1, title: "آموزش سریع", module: "آموزش", status: 'unlocked', points: 50, iconUrl: "YOUR_ICON_URL_FOR_STEP_1" },
+                    { id: 2, title: "انجام ماموریت‌ها", module: "مینی‌گیم", status: 'locked', points: 100, iconUrl: "YOUR_ICON_URL_FOR_STEP_2" },
+                    { id: 3, title: "کسب درآمد", module: "کسب درآمد", status: 'locked', points: 0, iconUrl: "YOUR_ICON_URL_FOR_STEP_3" }
                 ],
                 missions: [
                     { id: 1, type: 'video', module: "آموزش", title: "ویدیو ۱: فارکس چیست؟", status: 'unlocked', thumbnail: 'https://placehold.co/600x400/3b82f6/ffffff?text=Video+1', points: 10 },
@@ -295,6 +298,7 @@
             // --- MINIGAME STATE & VARIABLES ---
             let minigame = {};
             const minigamePage = document.getElementById('page-minigame');
+            let minigameListenersAttached = false; 
 
             // --- PROFILE & LEVEL SYSTEM ---
             const levels = [
@@ -314,14 +318,44 @@
                     const progress = Math.min(100, (pointsInLevel / pointsForNextLevel) * 100);
                     return { level: currentLevel.name, progress: progress };
                 }
-                return { level: currentLevel.name, progress: 100 }; // Max level
+                return { level: currentLevel.name, progress: 100 };
             }
 
             function updateProfileUI() {
                 const profile = state.userProfile;
-                document.getElementById('profile-name').textContent = profile.name;
-                document.getElementById('profile-avatar').src = profile.avatar;
                 
+                const userNameElement = document.getElementById('profile-name');
+                if (userNameElement) {
+                    userNameElement.textContent = profile.name;
+                }
+
+                const userAvatarElement = document.getElementById('profile-avatar');
+                if (userAvatarElement) {
+                    if (profile.avatar && profile.avatar.startsWith('http')) {
+                        if (userAvatarElement.tagName !== 'IMG') {
+                            const newImg = document.createElement('img');
+                            newImg.id = 'profile-avatar';
+                            newImg.alt = 'آواتار کاربر';
+                            newImg.className = 'w-16 h-16 rounded-full border-2 border-purple-400 ml-4';
+                            userAvatarElement.parentElement.replaceChild(newImg, userAvatarElement);
+                            newImg.src = profile.avatar;
+                        } else {
+                            userAvatarElement.src = profile.avatar;
+                        }
+                    } else {
+                        const initial = (profile.name || 'U').charAt(0).toUpperCase();
+                        if (userAvatarElement.tagName !== 'DIV') {
+                            const newDiv = document.createElement('div');
+                            newDiv.id = 'profile-avatar';
+                            newDiv.className = 'w-16 h-16 rounded-full border-2 border-purple-400 ml-4 flex items-center justify-center bg-purple-600 text-white font-bold text-2xl';
+                            userAvatarElement.parentElement.replaceChild(newDiv, userAvatarElement);
+                            newDiv.textContent = initial;
+                        } else {
+                            userAvatarElement.textContent = initial;
+                        }
+                    }
+                }
+
                 const { level, progress } = calculateLevel(profile.points);
                 document.getElementById('profile-level').textContent = `سطح: ${level}`;
                 document.getElementById('profile-progress').style.width = `${progress}%`;
@@ -331,6 +365,25 @@
                 state.userProfile.points += amount;
                 updateProfileUI();
                 saveState();
+            }
+            
+            function initTelegramData() {
+                try {
+                    if (window.Telegram && window.Telegram.WebApp) {
+                        const tg = window.Telegram.WebApp;
+                        tg.ready();
+                        const user = tg.initDataUnsafe.user;
+
+                        if (user) {
+                            const fullName = `${user.first_name} ${user.last_name || ''}`.trim();
+                            state.userProfile.name = fullName || 'کاربر مهمان';
+                            state.userProfile.avatar = user.photo_url; 
+                        }
+                    }
+                } catch (e) {
+                    console.error("Could not initialize Telegram data:", e);
+                }
+                updateProfileUI();
             }
 
             // --- MAIN APP FUNCTIONS ---
@@ -344,7 +397,10 @@
                     const savedState = localStorage.getItem(APP_STATE_KEY);
                     if (savedState) {
                         const parsedState = JSON.parse(savedState);
+                        const mergedProfile = { ...initialState.userProfile, ...parsedState.userProfile };
                         state = { ...JSON.parse(JSON.stringify(initialState)), ...parsedState };
+                        state.userProfile = mergedProfile;
+
                         state.mainSteps = initialState.mainSteps.map(is => {
                             const savedStep = parsedState.mainSteps ? parsedState.mainSteps.find(ss => ss.id === is.id) : null;
                             return savedStep ? { ...is, status: savedStep.status } : is;
@@ -473,34 +529,30 @@
                 }
             });
 
-            // --- MINIGAME FUNCTIONS ---
-            function initMinigame() {
-                minigame = {
-                    chart: null, candleSeries: null, account: { balance: 0, equity: 0, openPositions: [] },
-                    currentView: 'chart', lastCandleData: null, tradeIdCounter: 0, tutorialStep: 0,
-                    chartMode: 'random', signalAction: 'none',
-                    bullishState: { greenCandles: 0, pullbackCandles: 0 },
-                    bearishState: { redCandles: 0, pullbackCandles: 0 },
-                    hasOpenedFirstTrade: false,
-                    dataInterval: null, resizeObserver: null, isFinished: false,
-                    isTutorialActive: false,
-                    autoCloseTimer: null,
-                    reminderInterval: null,
+            // --- MINIGAME MAIN FUNCTION ---
+            function initMinigame(restartCapital = null) {
+                // --- MINIGAME HELPER FUNCTIONS (Defined inside initMinigame to create a closure) ---
+                const showNotification = (title, text) => {
+                    const notificationEl = minigamePage.querySelector('#telegram-notification');
+                    minigamePage.querySelector('#notification-title').textContent = title;
+                    minigamePage.querySelector('#notification-text').textContent = text;
+                    notificationEl.style.top = '50px';
+                    // TODO: To enable sound, add your sound URL to the <audio> tag with id="notification-sound" and uncomment the line below.
+                    // document.getElementById('notification-sound').play().catch(e => console.error("Notification sound failed:", e));
+                    setTimeout(() => { notificationEl.style.top = '-120px'; }, 5000);
                 };
-
-                const chartContainer = minigamePage.querySelector('#chart-container');
-                minigame.chart = LightweightCharts.createChart(chartContainer, { width: chartContainer.clientWidth, height: chartContainer.clientHeight, layout: { background: { type: 'solid', color: '#1c1c1e' }, textColor: 'rgba(255, 255, 255, 0.9)', bottomMargin: 60 }, grid: { vertLines: { color: '#2a2e39' }, horzLines: { color: '#2a2e39' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal }, rightPriceScale: { borderColor: 'rgba(197, 203, 206, 0.6)' }, timeScale: { borderColor: 'rgba(197, 203, 206, 0.6)', timeVisible: true, secondsVisible: false } });
-                minigame.candleSeries = minigame.chart.addCandlestickSeries({ upColor: '#26a69a', downColor: '#ef5350', borderDownColor: '#ef5350', borderUpColor: '#26a69a', wickDownColor: '#ef5350', wickUpColor: '#26a69a' });
-
-                minigamePage.querySelector('#modal-container').classList.remove('hidden');
-                minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-
-                const tutorialSteps = [
-                    { type: 'modal', title: 'راهنمای قیمت', text: 'قیمت فعلی نماد را می‌توانید در محور عمودی در سمت راست چارت مشاهده کنید.' },
-                    { type: 'highlight', selector: '#buy-button', text: 'با زدن این دکمه، یک معامله خرید (BUY) باز می‌کنید. اگر قیمت بالا برود، سود می‌کنید.' },
-                    { type: 'highlight', selector: '#sell-button', text: 'با زدن این دکمه، یک معامله فروش (SELL) باز می‌کنید. اگر قیمت پایین بیاید، سود می‌کنید.' },
-                    { type: 'highlight', selector: '.lot-control', text: 'در اینجا می‌توانید حجم معامله خود را تعیین کنید. حجم بیشتر یعنی سود یا زیان بیشتر!' },
-                ];
+                
+                const startSignalSequence = () => {
+                    showNotification('سیگنال خرید طلا!', 'فرصت خرید! همین الان بخر!');
+                    minigame.signalAction = 'pending';
+                    minigame.reminderInterval = setInterval(() => {
+                        if (minigame.signalAction === 'pending' && minigame.account.openPositions.length === 0) {
+                            showNotification('یادآوری سیگنال خرید!', 'فرصت خرید طلا را از دست نده!');
+                        } else {
+                            clearInterval(minigame.reminderInterval);
+                        }
+                    }, 10000);
+                };
 
                 const showModal = (title, message, buttons) => {
                     minigamePage.querySelector('#modal-title').textContent = title;
@@ -517,208 +569,6 @@
                     minigamePage.querySelector('#minigame-overlay').classList.remove('hidden');
                 };
 
-                const runTutorialStep = (stepIndex) => {
-                    minigame.tutorialStep = stepIndex;
-                    if (stepIndex >= tutorialSteps.length) {
-                        endInitialTutorial();
-                        return;
-                    }
-                    const step = tutorialSteps[stepIndex];
-
-                    if (step.type === 'modal') {
-                        showModal(step.title, step.text, [{ text: 'فهمیدم، بعدی', callback: () => {
-                            minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                            runTutorialStep(stepIndex + 1);
-                        }}]);
-                    } else if (step.type === 'highlight') {
-                        const targetElement = minigamePage.querySelector(step.selector);
-                        if (!targetElement) { endInitialTutorial(); return; }
-                        minigamePage.querySelector('#modal-overlay').classList.remove('hidden');
-                        minigamePage.querySelector('#tutorial-tip').classList.remove('hidden');
-                        const rect = targetElement.getBoundingClientRect();
-                        const phoneRect = minigamePage.getBoundingClientRect();
-                        const path = `M0,0 H${phoneRect.width} V${phoneRect.height} H0 Z M${rect.left - phoneRect.left},${rect.top - phoneRect.top} H${rect.right - phoneRect.left} V${rect.bottom - phoneRect.top} H${rect.left - phoneRect.left} Z`;
-                        minigamePage.querySelector('#modal-overlay').style.clipPath = `path(evenodd, "${path}")`;
-                        minigamePage.querySelector('#tutorial-text').textContent = step.text;
-                        const tutorialTip = minigamePage.querySelector('#tutorial-tip');
-                        tutorialTip.style.top = `${rect.bottom - phoneRect.top + 15}px`;
-                        tutorialTip.style.left = '50%';
-                        tutorialTip.style.transform = 'translateX(-50%)';
-                        minigamePage.querySelector('#tutorial-next-btn').textContent = 'بعدی';
-                    }
-                };
-                
-                const endInitialTutorial = () => {
-                    minigame.isTutorialActive = false;
-                    minigamePage.querySelector('#modal-overlay').classList.add('hidden');
-                    minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
-                    setTimeout(startSignalSequence, 4000);
-                };
-                
-                const triggerTradeTabTutorial = () => {
-                    minigame.isTutorialActive = true;
-                    showModal('بخش معاملات (Trade)', 'در این بخش می‌توانید تمام معاملات باز خود را مدیریت کرده و سود و زیان لحظه‌ای را مشاهده کنید.', [
-                        { text: 'برو به بخش ترید', callback: () => {
-                            switchMinigameView('trade');
-                            minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                            minigame.isTutorialActive = false;
-                        }}
-                    ]);
-                };
-
-                const startSignalSequence = () => {
-                    showNotification('سیگنال خرید طلا!', 'فرصت خرید! همین الان بخر!');
-                    minigame.signalAction = 'pending';
-                    minigame.reminderInterval = setInterval(() => {
-                        if (minigame.signalAction === 'pending' && minigame.account.openPositions.length === 0) {
-                            showNotification('یادآوری سیگنال خرید!', 'فرصت خرید طلا را از دست نده!');
-                        } else {
-                            clearInterval(minigame.reminderInterval);
-                        }
-                    }, 10000);
-                };
-
-                const showNotification = (title, text) => {
-                    const notificationEl = minigamePage.querySelector('#telegram-notification');
-                    minigamePage.querySelector('#notification-title').textContent = title;
-                    minigamePage.querySelector('#notification-text').textContent = text;
-                    notificationEl.style.top = '50px';
-                    document.getElementById('notification-sound').play().catch(e => console.error("Notification sound failed:", e));
-                    setTimeout(() => { notificationEl.style.top = '-120px'; }, 5000);
-                };
-
-                const completeMinigameStep = (didWin) => {
-                    const minigameStep = state.mainSteps.find(s => s.module === 'مینی‌گیم');
-                    // FIXED: Corrected reference error from mainStep to minigameStep
-                    if(didWin && minigameStep && minigameStep.status !== 'completed') {
-                        minigameStep.status = 'completed';
-                        addPoints(minigameStep.points || 100);
-                        const nextStep = state.mainSteps.find(s => s.id === minigameStep.id + 1);
-                        if(nextStep) nextStep.status = 'unlocked';
-                        saveState();
-                    }
-                    navigateTo('page-steps');
-                };
-                
-                minigamePage.querySelectorAll('.capital-btn').forEach(button => button.onclick = () => {
-                    document.getElementById('select-sound').play().catch(() => {});
-                    const amount = parseFloat(button.dataset.amount);
-                    minigame.account.balance = amount;
-                    minigame.account.equity = amount;
-                    
-                    const lotSizeInput = minigamePage.querySelector('#lot-size-input');
-                    if (amount < 500) lotSizeInput.value = '0.01';
-                    else if (amount < 1000) lotSizeInput.value = '0.05';
-                    else if (amount < 10000) lotSizeInput.value = '0.10';
-                    else lotSizeInput.value = '1.00';
-
-                    updateTradeInfoUI();
-                    minigamePage.querySelector('#modal-container').classList.add('hidden');
-                    
-                    if (!minigame.isTutorialActive) {
-                        minigame.isTutorialActive = true;
-                        setTimeout(() => runTutorialStep(0), 3000);
-                    }
-                });
-
-                minigamePage.querySelector('#tutorial-next-btn').onclick = () => {
-                    runTutorialStep(minigame.tutorialStep + 1);
-                };
-
-                // FIXED: Centralized tab switching logic
-                const switchMinigameView = (view) => {
-                    if (view === 'chart' || view === 'trade') {
-                        minigame.currentView = view;
-                        minigamePage.querySelector('#chart-view').classList.toggle('hidden', view !== 'chart');
-                        minigamePage.querySelector('#trade-view').classList.toggle('hidden', view !== 'trade');
-                        minigamePage.querySelector('.footer-item.active').classList.remove('active');
-                        minigamePage.querySelector(`.footer-item[data-view="${view}"]`).classList.add('active');
-                        if (view === 'trade') {
-                            renderPositionsList();
-                        }
-                    }
-                };
-                
-                minigamePage.querySelectorAll('.footer-item').forEach(item => {
-                    item.onclick = () => switchMinigameView(item.dataset.view);
-                });
-
-                const openTrade = (type) => {
-                    if (minigame.account.openPositions.length > 0) {
-                        showModal('خطا', 'شما در حال حاضر یک معامله باز دارید. ابتدا آن را ببندید.', [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
-                        return;
-                    }
-
-                    if (minigame.signalAction === 'none') {
-                        showModal('کمی صبر کنید', 'بهتره برای ورود به معامله منتظر سیگنال بمانی.', [{ text: 'متوجه شدم', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
-                        return;
-                    }
-
-                    if (minigame.isTutorialActive || !minigame.lastCandleData) return;
-                    
-                    if (minigame.signalAction === 'pending') {
-                        clearInterval(minigame.reminderInterval);
-                        minigame.chartMode = 'bullish';
-                        if (type === 'buy') {
-                            minigame.signalAction = 'followed';
-                        } else {
-                            minigame.signalAction = 'ignored';
-                        }
-                    }
-
-                    document.getElementById('trade-sound').play().catch(e => {});
-                    const lotSize = parseFloat(minigamePage.querySelector('#lot-size-input').value);
-                    const entryPrice = minigame.lastCandleData.close;
-                    const newPosition = { id: ++minigame.tradeIdCounter, type, lotSize, entryPrice, pnl: 0, priceLine: null };
-                    newPosition.priceLine = minigame.candleSeries.createPriceLine({ price: entryPrice, color: type === 'buy' ? '#26a69a' : '#ef5350', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: `${type.toUpperCase()} ${lotSize}` });
-                    minigame.account.openPositions.push(newPosition);
-                    renderPositionsList();
-                    
-                    if (!minigame.hasOpenedFirstTrade) {
-                        minigame.hasOpenedFirstTrade = true;
-                        setTimeout(triggerTradeTabTutorial, 1000);
-                    }
-                    
-                    if (minigame.autoCloseTimer) clearTimeout(minigame.autoCloseTimer);
-                    minigame.autoCloseTimer = setTimeout(() => autoCloseTrade(newPosition.id), 16000);
-                };
-                
-                const autoCloseTrade = (tradeId) => {
-                    const trade = minigame.account.openPositions.find(p => p.id === tradeId);
-                    if (trade) closeTrade(tradeId, 'auto');
-                };
-
-                const closeTrade = (tradeId, reason = 'manual') => {
-                    if (minigame.autoCloseTimer) clearTimeout(minigame.autoCloseTimer);
-                    
-                    const index = minigame.account.openPositions.findIndex(p => p.id === tradeId);
-                    if (index > -1) {
-                        const trade = minigame.account.openPositions[index];
-                        minigame.account.balance += trade.pnl;
-                        minigame.candleSeries.removePriceLine(trade.priceLine);
-                        minigame.account.openPositions.splice(index, 1);
-                        renderPositionsList();
-                        updateTradeInfoUI();
-                        
-                        if (minigame.signalAction === 'followed') {
-                            document.getElementById('win-sound').play().catch(()=>{});
-                            confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-                            const winMessage = `شما با پیروی از سیگنال ${trade.pnl.toFixed(2)}$ سود کردید! این سود می‌توانست واقعی باشد. تا رسیدن به سود واقعی فقط یک قدم مانده.`;
-                            showModal('تبریک! آزمون را با موفقیت گذراندید!', winMessage, [{ text: 'ادامه', callback: () => completeMinigameStep(true) }]);
-                        } else if (minigame.signalAction === 'ignored') {
-                            document.getElementById('lose-sound').play().catch(()=>{});
-                            const loseMessage = `شما به سیگنال توجه نکردید و ${Math.abs(trade.pnl).toFixed(2)}$ ضرر کردید. تکرار این کار می‌تواند به سرعت سرمایه شما را از بین ببرد.`;
-                            showModal('آزمون ناموفق بود!', loseMessage, [
-                                { text: 'تلاش مجدد', class: 'w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg', callback: () => { cleanupMinigame(); initMinigame(); } },
-                                { text: 'رد کردن مرحله', class: 'w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg', callback: () => completeMinigameStep(false) }
-                            ]);
-                        } else {
-                             const resultText = trade.pnl >= 0 ? `شما این معامله را با سود ${trade.pnl.toFixed(2)}$ بستید.` : `شما این معامله را با ضرر ${trade.pnl.toFixed(2)}$ بستید.`;
-                             showModal('معامله بسته شد', resultText, [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
-                        }
-                    }
-                };
-                
                 const updateTradeInfoUI = () => {
                     const totalPnl = minigame.account.openPositions.reduce((sum, p) => sum + p.pnl, 0);
                     minigame.account.equity = minigame.account.balance + totalPnl;
@@ -741,7 +591,82 @@
                         listElement.appendChild(card);
                     });
                 };
+
+                const closeTrade = (tradeId, reason = 'manual') => {
+                    if (minigame.autoCloseTimer) clearTimeout(minigame.autoCloseTimer);
+                    
+                    const index = minigame.account.openPositions.findIndex(p => p.id === tradeId);
+                    if (index > -1) {
+                        const trade = minigame.account.openPositions[index];
+                        minigame.account.balance += trade.pnl;
+                        minigame.candleSeries.removePriceLine(trade.priceLine);
+                        minigame.account.openPositions.splice(index, 1);
+                        renderPositionsList();
+                        updateTradeInfoUI();
+                        
+                        if (minigame.signalAction === 'followed') {
+                            document.getElementById('win-sound').play().catch(()=>{});
+                            confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+                            const winMessage = `شما با پیروی از سیگنال ${trade.pnl.toFixed(2)}$ سود کردید! این سود می‌توانست واقعی باشد. تا رسیدن به سود واقعی فقط یک قدم مانده.`;
+                            showModal('تبریک! آزمون را با موفقیت گذراندید!', winMessage, [{ text: 'ادامه', callback: () => completeMinigameStep(true) }]);
+                        } else if (minigame.signalAction === 'ignored') {
+                            document.getElementById('lose-sound').play().catch(()=>{});
+                            const loseMessage = `شما به سیگنال توجه نکردید و ${Math.abs(trade.pnl).toFixed(2)}$ ضرر کردید. تکرار این کار می‌تواند به سرعت سرمایه شما را از بین ببرد.`;
+                            const capitalForRestart = minigame.initialCapital;
+                            showModal('آزمون ناموفق بود!', loseMessage, [
+                                { text: 'تلاش مجدد', class: 'w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg', callback: () => { 
+                                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
+                                    cleanupMinigame(); 
+                                    initMinigame(capitalForRestart); 
+                                } },
+                                { text: 'رد کردن مرحله', class: 'w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg', callback: () => completeMinigameStep(false) }
+                            ]);
+                        } else {
+                             const resultText = trade.pnl >= 0 ? `شما این معامله را با سود ${trade.pnl.toFixed(2)}$ بستید.` : `شما این معامله را با ضرر ${trade.pnl.toFixed(2)}$ بستید.`;
+                             showModal('معامله بسته شد', resultText, [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
+                        }
+                    }
+                };
                 
+                const autoCloseTrade = (tradeId) => {
+                    const trade = minigame.account.openPositions.find(p => p.id === tradeId);
+                    if (trade) closeTrade(tradeId, 'auto');
+                };
+                
+                const openTrade = (type) => {
+                    if (minigame.account.openPositions.length > 0) {
+                        showModal('خطا', 'شما در حال حاضر یک معامله باز دارید. ابتدا آن را ببندید.', [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
+                        return;
+                    }
+                    if (minigame.signalAction === 'none') {
+                        showModal('کمی صبر کنید', 'بهتره برای ورود به معامله منتظر سیگنال بمانی.', [{ text: 'متوجه شدم', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
+                        return;
+                    }
+                    if (minigame.isTutorialActive || !minigame.lastCandleData) return;
+                    if (minigame.signalAction === 'pending') {
+                        clearInterval(minigame.reminderInterval);
+                        minigame.chartMode = 'bullish';
+                        if (type === 'buy') {
+                            minigame.signalAction = 'followed';
+                        } else {
+                            minigame.signalAction = 'ignored';
+                        }
+                    }
+                    document.getElementById('trade-sound').play().catch(e => {});
+                    const lotSize = parseFloat(minigamePage.querySelector('#lot-size-input').value);
+                    const entryPrice = minigame.lastCandleData.close;
+                    const newPosition = { id: ++minigame.tradeIdCounter, type, lotSize, entryPrice, pnl: 0, priceLine: null };
+                    newPosition.priceLine = minigame.candleSeries.createPriceLine({ price: entryPrice, color: type === 'buy' ? '#26a69a' : '#ef5350', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: `${type.toUpperCase()} ${lotSize}` });
+                    minigame.account.openPositions.push(newPosition);
+                    renderPositionsList();
+                    if (!minigame.hasOpenedFirstTrade) {
+                        minigame.hasOpenedFirstTrade = true;
+                        setTimeout(triggerTradeTabTutorial, 1000);
+                    }
+                    if (minigame.autoCloseTimer) clearTimeout(minigame.autoCloseTimer);
+                    minigame.autoCloseTimer = setTimeout(() => autoCloseTrade(newPosition.id), 16000);
+                };
+
                 const updatePnl = () => {
                     if (!minigame.lastCandleData) return;
                     const currentPrice = minigame.lastCandleData.close;
@@ -781,6 +706,187 @@
                         return { ...minigame.lastCandleData, close, high: Math.max(minigame.lastCandleData.high, close), low: Math.min(minigame.lastCandleData.low, close) };
                     }
                 };
+
+                const runTutorialStep = (stepIndex, stepsArray) => {
+                    const tutorialSteps = [
+                        { type: 'modal', title: 'راهنمای قیمت', text: 'قیمت فعلی نماد را می‌توانید در محور عمودی در سمت راست چارت مشاهده کنید.' },
+                        { type: 'highlight', selector: '#buy-button', text: 'با زدن این دکمه، یک معامله خرید (BUY) باز می‌کنید. اگر قیمت بالا برود، سود می‌کنید.' },
+                        { type: 'highlight', selector: '#sell-button', text: 'با زدن این دکمه، یک معامله فروش (SELL) باز می‌کنید. اگر قیمت پایین بیاید، سود می‌کنید.' },
+                        { type: 'highlight', selector: '.lot-control', text: 'در اینجا می‌توانید حجم معامله خود را تعیین کنید. حجم بیشتر یعنی سود یا زیان بیشتر!' },
+                    ];
+                    stepsArray = stepsArray || tutorialSteps;
+                    minigame.tutorialStep = stepIndex;
+                    if (stepIndex >= stepsArray.length) {
+                        if (stepsArray === tutorialSteps) endInitialTutorial();
+                        else endTradeTutorial();
+                        return;
+                    }
+                    const step = stepsArray[stepIndex];
+                    if (step.type === 'modal') {
+                        showModal(step.title, step.text, [{ text: 'فهمیدم، بعدی', callback: () => {
+                            minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
+                            runTutorialStep(stepIndex + 1, stepsArray);
+                        }}]);
+                    } else if (step.type === 'highlight') {
+                        const targetElement = minigamePage.querySelector(step.selector);
+                        if (!targetElement) { 
+                            if (stepsArray === tutorialSteps) endInitialTutorial();
+                            else endTradeTutorial();
+                            return; 
+                        }
+                        minigamePage.querySelector('#modal-overlay').classList.remove('hidden');
+                        minigamePage.querySelector('#tutorial-tip').classList.remove('hidden');
+                        const rect = targetElement.getBoundingClientRect();
+                        const phoneRect = minigamePage.getBoundingClientRect();
+                        const path = `M0,0 H${phoneRect.width} V${phoneRect.height} H0 Z M${rect.left - phoneRect.left},${rect.top - phoneRect.top} H${rect.right - phoneRect.left} V${rect.bottom - phoneRect.top} H${rect.left - phoneRect.left} Z`;
+                        minigamePage.querySelector('#modal-overlay').style.clipPath = `path(evenodd, "${path}")`;
+                        minigamePage.querySelector('#tutorial-text').textContent = step.text;
+                        const tutorialTip = minigamePage.querySelector('#tutorial-tip');
+                        tutorialTip.style.top = `${rect.bottom - phoneRect.top + 15}px`;
+                        tutorialTip.style.left = '50%';
+                        tutorialTip.style.transform = 'translateX(-50%)';
+                        minigamePage.querySelector('#tutorial-next-btn').onclick = () => runTutorialStep(stepIndex + 1, stepsArray);
+                        minigamePage.querySelector('#tutorial-next-btn').textContent = 'بعدی';
+                    }
+                };
+                
+                const endInitialTutorial = () => {
+                    minigame.isTutorialActive = false;
+                    const overlay = minigamePage.querySelector('#modal-overlay');
+                    overlay.classList.add('hidden');
+                    overlay.style.clipPath = '';
+                    minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
+                    setTimeout(startSignalSequence, 4000);
+                };
+
+                const endTradeTutorial = () => {
+                    minigame.isTutorialActive = false;
+                    const overlay = minigamePage.querySelector('#modal-overlay');
+                    overlay.classList.add('hidden');
+                    overlay.style.clipPath = '';
+                    minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
+                };
+                
+                const triggerTradeTabTutorial = () => {
+                    const tradeTutorialSteps = [
+                        { type: 'highlight', selector: '.trade-info-card', text: 'اینجا می‌توانید وضعیت کلی حساب خود را ببینید.'},
+                        { type: 'highlight', selector: '#balance-info', text: 'این موجودی اصلی حساب شماست.'},
+                        { type: 'highlight', selector: '#equity-info', text: 'این سرمایه شناور شماست که با سود و زیان معاملات باز تغییر می‌کند.'},
+                        { type: 'highlight', selector: '#pnl-info', text: 'اینجا می‌توانید سود یا زیان کل معاملات باز خود را مشاهده کنید.'},
+                    ];
+                    minigame.isTutorialActive = true;
+                    showModal('بخش معاملات (Trade)', 'در این بخش می‌توانید تمام معاملات باز خود را مدیریت کرده و سود و زیان لحظه‌ای را مشاهده کنید.', [
+                        { text: 'برو به بخش ترید', callback: () => {
+                            switchMinigameView('trade');
+                            minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
+                            setTimeout(() => runTutorialStep(0, tradeTutorialSteps), 500);
+                        }}
+                    ]);
+                };
+
+                const switchMinigameView = (view) => {
+                    // Fail-safe to ensure tutorial overlays are hidden when navigating
+                    const overlay = minigamePage.querySelector('#modal-overlay');
+                    overlay.classList.add('hidden');
+                    overlay.style.clipPath = '';
+                    minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
+
+                    if (view === 'chart' || view === 'trade') {
+                        minigame.currentView = view;
+                        minigamePage.querySelector('#chart-view').classList.toggle('hidden', view !== 'chart');
+                        minigamePage.querySelector('#trade-view').classList.toggle('hidden', view !== 'trade');
+                        
+                        const activeFooterItem = minigamePage.querySelector('.footer-item.active');
+                        if (activeFooterItem) activeFooterItem.classList.remove('active');
+                        
+                        const newActiveFooterItem = minigamePage.querySelector(`.footer-item[data-view="${view}"]`);
+                        if (newActiveFooterItem) newActiveFooterItem.classList.add('active');
+
+                        if (view === 'trade') {
+                            renderPositionsList();
+                        }
+                    }
+                };
+
+                // --- Start of initMinigame logic ---
+                minigame = {
+                    chart: null, candleSeries: null, 
+                    account: { balance: 0, equity: 0, openPositions: [] },
+                    currentView: 'chart', lastCandleData: null, tradeIdCounter: 0, tutorialStep: 0,
+                    chartMode: 'random', signalAction: 'none',
+                    bullishState: { greenCandles: 0, pullbackCandles: 0 },
+                    bearishState: { redCandles: 0, pullbackCandles: 0 },
+                    hasOpenedFirstTrade: false,
+                    dataInterval: null, resizeObserver: null, isFinished: false,
+                    isTutorialActive: restartCapital === null,
+                    autoCloseTimer: null,
+                    reminderInterval: null,
+                    initialCapital: restartCapital || 0,
+                };
+
+                const chartContainer = minigamePage.querySelector('#chart-container');
+                minigame.chart = LightweightCharts.createChart(chartContainer, { width: chartContainer.clientWidth, height: chartContainer.clientHeight, layout: { background: { type: 'solid', color: '#1c1c1e' }, textColor: 'rgba(255, 255, 255, 0.9)', bottomMargin: 60 }, grid: { vertLines: { color: '#2a2e39' }, horzLines: { color: '#2a2e39' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal }, rightPriceScale: { borderColor: 'rgba(197, 203, 206, 0.6)' }, timeScale: { borderColor: 'rgba(197, 203, 206, 0.6)', timeVisible: true, secondsVisible: false } });
+                minigame.candleSeries = minigame.chart.addCandlestickSeries({ upColor: '#26a69a', downColor: '#ef5350', borderDownColor: '#ef5350', borderUpColor: '#26a69a', wickDownColor: '#ef5350', wickUpColor: '#26a69a' });
+
+                if (!minigameListenersAttached) {
+                    minigamePage.querySelectorAll('.capital-btn').forEach(button => button.onclick = () => {
+                        document.getElementById('select-sound').play().catch(() => {});
+                        const amount = parseFloat(button.dataset.amount);
+                        minigame.account.balance = amount;
+                        minigame.account.equity = amount;
+                        minigame.initialCapital = amount;
+
+                        const lotSizeInput = minigamePage.querySelector('#lot-size-input');
+                        if (amount < 500) lotSizeInput.value = '0.01';
+                        else if (amount < 1000) lotSizeInput.value = '0.05';
+                        else if (amount < 10000) lotSizeInput.value = '0.10';
+                        else lotSizeInput.value = '1.00';
+
+                        updateTradeInfoUI();
+                        minigamePage.querySelector('#modal-container').classList.add('hidden');
+                        
+                        if (minigame.isTutorialActive) {
+                            setTimeout(() => runTutorialStep(0, null), 1000); // Shortened delay
+                        } else {
+                            setTimeout(startSignalSequence, 1000);
+                        }
+                    });
+
+                    minigamePage.querySelector('.app-footer').addEventListener('click', (e) => {
+                        const targetItem = e.target.closest('.footer-item');
+                        if (targetItem && targetItem.dataset.view) {
+                            switchMinigameView(targetItem.dataset.view);
+                        }
+                    });
+
+                    minigamePage.querySelector('#buy-button').onclick = () => openTrade('buy');
+                    minigamePage.querySelector('#sell-button').onclick = () => openTrade('sell');
+                    minigamePage.querySelector('#lot-up').onclick = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) + 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
+                    minigamePage.querySelector('#lot-down').onclick = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) - 0.01; if (v < 0.01) v = 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
+                    minigamePage.querySelector('#minigame-back-btn').onclick = () => navigateTo('page-steps');
+                    
+                    minigameListenersAttached = true;
+                }
+
+                if (restartCapital !== null) {
+                    minigame.account.balance = restartCapital;
+                    minigame.account.equity = restartCapital;
+                    
+                    const lotSizeInput = minigamePage.querySelector('#lot-size-input');
+                    if (restartCapital < 500) lotSizeInput.value = '0.01';
+                    else if (restartCapital < 1000) lotSizeInput.value = '0.05';
+                    else if (restartCapital < 10000) lotSizeInput.value = '0.10';
+                    else lotSizeInput.value = '1.00';
+
+                    updateTradeInfoUI();
+                    minigamePage.querySelector('#modal-container').classList.add('hidden');
+                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
+                    switchMinigameView('chart');
+                    setTimeout(startSignalSequence, 2000);
+                } else {
+                    minigamePage.querySelector('#modal-container').classList.remove('hidden');
+                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
+                }
                 
                 let currentPrice = 2330;
                 const initialData = [];
@@ -802,16 +908,12 @@
                     updatePnl();
                 }, 1000);
 
-                minigame.resizeObserver = new ResizeObserver(() => minigame.chart.resize(chartContainer.clientWidth, chartContainer.clientHeight));
+                minigame.resizeObserver = new ResizeObserver(() => {
+                    if (minigame.chart) {
+                        minigame.chart.resize(chartContainer.clientWidth, chartContainer.clientHeight)
+                    }
+                });
                 minigame.resizeObserver.observe(chartContainer);
-
-                minigamePage.querySelector('#buy-button').onclick = () => openTrade('buy');
-                minigamePage.querySelector('#sell-button').onclick = () => openTrade('sell');
-                minigamePage.querySelector('#lot-up').onclick = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) + 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
-                minigamePage.querySelector('#lot-down').onclick = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) - 0.01; if (v < 0.01) v = 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
-                minigamePage.querySelector('#minigame-back-btn').onclick = () => {
-                    navigateTo('page-steps');
-                };
             }
 
             function cleanupMinigame() {
@@ -824,6 +926,7 @@
             
             // --- APP INITIALIZATION ---
             loadState();
+            initTelegramData();
             navigateTo(state.currentPage);
         });
     </script>
