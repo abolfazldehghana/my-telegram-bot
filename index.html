@@ -13,110 +13,227 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: #030712;
-            --tg-theme-bg-color: var(--bg-color);
+            --tg-theme-bg-color: #030712; /* Fallback color */
         }
         html {
             height: 100%;
         }
         body {
             font-family: 'Vazirmatn', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             background-color: var(--tg-theme-bg-color);
             color: white;
-            overscroll-behavior-y: none;
             margin: 0;
             padding: 0;
             height: 100%;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overscroll-behavior-y: none;
         }
         #app-container {
             height: 100%;
             width: 100%;
         }
-        /* ... تمام استایل‌های دیگر شما اینجا قرار می‌گیرد ... */
-        .page { transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out; }
-        .page.hidden { opacity: 0; pointer-events: none; position: absolute; top:0; left:0; right:0; bottom:0; }
+        .page {
+            transition: opacity 0.3s ease-in-out;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+        }
+        .page.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* ... سایر استایل‌های اصلی شما ... */
+        .glass-effect { background: rgba(42, 53, 71, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .splash-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: 0;}
+        .gradient-blob { position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.3; animation: move 15s infinite alternate; }
+        .blob-1 { width: 300px; height: 300px; top: -50px; left: -100px; background: #3b82f6; }
+        .blob-2 { width: 250px; height: 250px; bottom: -80px; right: -80px; background: #8b5cf6; animation-delay: -7s; }
+        @keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(40px, 60px) scale(1.2); } }
 
     </style>
 </head>
 <body>
 
     <div id="app-container" class="w-full h-full relative overflow-hidden">
-        <div id="page-splash" class="page w-full h-full flex flex-col items-center justify-between text-center p-8">
-            </div>
+        
+        <div class="splash-bg">
+            <div class="gradient-blob blob-1"></div>
+            <div class="gradient-blob blob-2"></div>
+        </div>
 
-        <div id="page-video" class="page hidden w-full h-full flex flex-col bg-black">
+        <div id="page-splash" class="page w-full h-full flex flex-col items-center justify-between text-center p-8 relative">
+            <div class="z-10 w-full flex-grow flex flex-col items-center justify-center">
+                <div class="w-40 h-40 md:w-52 md:h-52 rounded-full shadow-2xl overflow-hidden mb-8 border-2 border-white/20 logo-glow flex items-center justify-center">
+                    <img src="https://i.ibb.co/RTyYwsDn/ChatGPT-Image-Jul-4-2025-05-27-28-PM.jpg" alt="لوگوی فارکس کیلر" class="w-full h-full object-cover transform scale-[1.3]" onerror="this.onerror=null;this.src='https://placehold.co/208x208/111827/ffffff?text=Logo';">
+                </div>
+                <h1 class="text-3xl font-black text-white mb-3 drop-shadow-lg">
+                    به <span class="text-red-500 drop-shadow-glow-red">فارکس کیلر</span> خوش آمدید
+                </h1>
+                <p class="text-lg font-medium text-gray-300 drop-shadow-md">
+                    اینجا قراره صفر تا صد درکنارهم به درآمد دلاری برسیم
+                </p>
             </div>
+            <button id="start-btn" class="z-10 w-full glass-effect hover:bg-white/10 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center space-x-2 space-x-reverse">
+                <span>همین حالا شروع کن</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </button>
+        </div>
+        
+        <div id="page-video" class="page hidden w-full h-full flex flex-col bg-black">
+            <video id="intro-video" class="w-full h-full object-cover" src="https://assets.mixkit.co/videos/preview/mixkit-person-working-on-a-laptop-in-a-dark-room-4335-large.mp4" loop muted playsinline>ویدیو پشتیبانی نمی‌شود.</video>
+            <div class="absolute bottom-0 left-0 w-full p-8 bg-gradient-to-t from-black/80 to-transparent">
+                <button id="continue-from-video-btn" class="w-full glass-effect hover:bg-white/10 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-transform transform hover:scale-105">ادامه مسیر</button>
+            </div>
+        </div>
 
         <div id="page-steps" class="page hidden w-full h-full flex flex-col p-6">
+            <h2 class="flex-shrink-0 text-2xl font-extrabold text-center text-white mb-8 drop-shadow-lg">مسیر شما در چند مرحله ساده</h2>
+            <div class="flex-grow z-10 overflow-y-auto -mr-2 pr-2 custom-scrollbar">
+                <div id="steps-container" class="space-y-4"></div>
             </div>
+            <div class="flex-shrink-0 text-center mt-auto z-10 pt-4">
+                <button id="go-to-dashboard-btn" class="w-full glass-effect hover:bg-white/10 text-white font-bold py-4 px-4 rounded-xl shadow-lg disabled:bg-gray-800/50 disabled:text-gray-400 disabled:cursor-not-allowed">ورود به داشبورد کامل</button>
+            </div>
+        </div>
         
         <div id="page-dashboard" class="page hidden w-full h-full flex flex-col">
-            </div>
+            <header class="flex-shrink-0 p-4 glass-effect flex items-center space-x-4 space-x-reverse sticky top-0 z-20">
+                <button id="back-to-steps-btn" class="p-2 rounded-full text-gray-300 hover:bg-gray-700/80">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </button>
+                <div class="flex-grow text-center"><h3 id="dashboard-title" class="font-bold text-lg text-white">مأموریت‌ها</h3></div>
+                <div class="w-8"></div>
+            </header>
+            <main id="mission-path" class="flex-grow p-4 overflow-y-auto z-10 custom-scrollbar"></main>
+        </div>
 
         <div id="page-minigame" class="page hidden w-full h-full flex flex-col text-white bg-[#1c1c1e]">
             </div>
     </div>
 
     <script>
-    // تمام کدهای جاوا اسکریپت شما که ارسال کرده بودید در اینجا قرار می‌گیرد
-    // به همراه اصلاحات نهایی برای سازگاری کامل
-    
     document.addEventListener('DOMContentLoaded', () => {
-        // --- TELEGRAM WEB APP INITIALIZATION & VIEWPORT FIX ---
+
+        // --- 1. TELEGRAM WEB APP INITIALIZATION & VIEWPORT FIX ---
+        // این بخش حیاتی، اول از همه اجرا می‌شود
         try {
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
                 tg.ready();
                 tg.expand();
-
+                
                 const setViewportHeight = () => {
-                    const vh = window.innerHeight * 0.01;
-                    document.documentElement.style.setProperty('--vh', `${vh}px`);
                     const appContainer = document.getElementById('app-container');
-                    if (appContainer) {
-                        appContainer.style.height = `${window.innerHeight}px`;
-                    }
+                    if (appContainer) appContainer.style.height = `${window.innerHeight}px`;
                 };
                 
-                // Set initial height and on resize/viewport change
                 setViewportHeight();
                 tg.onEvent('viewportChanged', setViewportHeight);
                 window.addEventListener('resize', setViewportHeight);
 
-
-                // هماهنگ‌سازی رنگ پس‌زمینه با تم تلگرام
                 const bgColor = tg.themeParams.bg_color || '#030712';
                 document.body.style.backgroundColor = bgColor;
-                document.documentElement.style.setProperty('--tg-theme-bg-color', bgColor);
             }
-        } catch (e) {
-            console.error("Telegram Web App script error:", e);
+        } catch (e) { console.error("Telegram Init Error:", e); }
+
+
+        // --- 2. SELECTORS & STATE ---
+        // ابتدا تمام عناصر و وضعیت اولیه را تعریف می‌کنیم
+        const APP_STATE_KEY = 'forexKillerAppState';
+        const pages = {};
+        const buttons = {};
+        let state = {};
+        let minigame = {};
+
+        const initialState = { /* ... محتوای کامل initialState شما ... */ };
+
+        // --- 3. MAIN APPLICATION LOGIC ---
+        // این تابع اصلی برنامه شماست که همه چیز را راه‌اندازی می‌کند
+        function initializeApp() {
+            // Select all DOM elements
+            Object.assign(pages, {
+                splash: document.getElementById('page-splash'),
+                video: document.getElementById('page-video'),
+                steps: document.getElementById('page-steps'),
+                dashboard: document.getElementById('page-dashboard'),
+                minigame: document.getElementById('page-minigame'),
+            });
+            Object.assign(buttons, {
+                start: document.getElementById('start-btn'),
+                continueFromVideo: document.getElementById('continue-from-video-btn'),
+                goToDashboard: document.getElementById('go-to-dashboard-btn'),
+                backToSteps: document.getElementById('back-to-steps-btn'),
+            });
+
+            // Load saved state or set initial state
+            loadState();
+            
+            // Setup all event listeners
+            setupEventListeners();
+            
+            // Navigate to the correct starting page
+            navigateTo(state.currentPage || 'page-splash');
         }
 
-        // --- ALL YOUR ORIGINAL CODE RESTORED ---
-        // تمام کدهای مربوط به state, selectors, functions, event listeners, و minigame
-        // که ارسال کرده بودید، در اینجا قرار می‌گیرد.
+        // --- 4. HELPER FUNCTIONS ---
+        // تمام توابع شما در اینجا قرار می‌گیرند
         
-        const APP_STATE_KEY = 'forexKillerAppState';
-        const pages = document.querySelectorAll('.page');
-        // ... و بقیه selectors ...
+        function loadState() {
+            try {
+                const savedState = localStorage.getItem(APP_STATE_KEY);
+                state = savedState ? JSON.parse(savedState) : JSON.parse(JSON.stringify(initialState));
+                // Ensure currentPage is valid on load
+                state.currentPage = state.currentPage || 'page-splash';
+            } catch (e) {
+                console.error("Failed to load state:", e);
+                state = JSON.parse(JSON.stringify(initialState));
+            }
+        }
 
-        const initialState = { /* ... */ };
-        let state = {};
-
-        function saveState() { /* ... */ }
-        function loadState() { /* ... */ }
-        function navigateTo(pageId) { /* ... */ }
+        function saveState() {
+             try { localStorage.setItem(APP_STATE_KEY, JSON.stringify(state)); } 
+             catch (e) { console.error("Failed to save state:", e); }
+        }
         
-        // و تمام توابع دیگر و event listener ها
-        
-        // --- INITIAL APP LOAD ---
-        loadState();
-        navigateTo(state.currentPage || 'page-splash');
+        function navigateTo(pageId) {
+            Object.values(pages).forEach(page => {
+                if(page) page.classList.toggle('hidden', page.id !== pageId);
+            });
+            state.currentPage = pageId;
 
+            const introVideo = document.getElementById('intro-video');
+            if(pageId === 'page-video' && introVideo) {
+                introVideo.play().catch(e => console.error("Video autoplay error:", e));
+            } else if (introVideo) {
+                introVideo.pause();
+            }
+            
+            // ... منطق مربوط به مینی‌گیم و سایر صفحات ...
+        }
+
+        function renderStepsPage() { /* ... کد کامل تابع شما ... */ }
+        function renderMissions(moduleName) { /* ... کد کامل تابع شما ... */ }
+        function initMinigame() { /* ... کد کامل تابع شما ... */ }
+        function cleanupMinigame() { /* ... کد کامل تابع شما ... */ }
+
+
+        function setupEventListeners() {
+            if (buttons.start) {
+                buttons.start.addEventListener('click', () => navigateTo('page-video'));
+            }
+            if (buttons.continueFromVideo) {
+                buttons.continueFromVideo.addEventListener('click', () => {
+                    renderStepsPage();
+                    navigateTo('page-steps');
+                });
+            }
+             // ... تمام Event Listener های دیگر شما ...
+        }
+
+        // --- 5. START THE APP ---
+        // پس از تعریف همه چیز، برنامه را اجرا می‌کنیم
+        initializeApp();
     });
     </script>
 </body>
