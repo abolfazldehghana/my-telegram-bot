@@ -86,26 +86,49 @@
         #page-minigame .arrow { border: solid white; border-width: 0 2px 2px 0; display: inline-block; padding: 3px; }
         #page-minigame .arrow-up { transform: rotate(-135deg); }
         #page-minigame .arrow-down { transform: rotate(45deg); }
-        #page-minigame .app-footer { background-color: #2c2c2e; display: flex; justify-content: space-around; padding: 8px 0; flex-shrink: 0; border-top: 1px solid #3a3a3c; padding-bottom: env(safe-area-inset-bottom); }
+        /* *** MODIFIED: Added z-index to footer to ensure it's clickable *** */
+        #page-minigame .app-footer { position: relative; z-index: 30; background-color: #2c2c2e; display: flex; justify-content: space-around; padding: 8px 0; flex-shrink: 0; border-top: 1px solid #3a3a3c; padding-bottom: env(safe-area-inset-bottom); }
         #page-minigame .footer-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #8e8e93; cursor: pointer; flex: 1; }
         #page-minigame .footer-item.active { color: #0b84fe; }
         #page-minigame .footer-item i { font-size: 24px; margin-bottom: 4px; }
         #page-minigame #modal-overlay { position: absolute; inset: 0; background-color: #000; z-index: 100; opacity: 0.85; transition: clip-path 0.4s ease-in-out; pointer-events: none; }
         #page-minigame #tutorial-tip { position: absolute; z-index: 102; width: 280px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); pointer-events: auto; }
-        #page-minigame #telegram-notification { position: absolute; top: -120px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 110; transition: top 0.5s ease-in-out; }
+        #page-minigame #telegram-notification { 
+            position: absolute; 
+            top: -150px; /* Start off-screen */
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 90%; 
+            max-width: 350px;
+            z-index: 110; 
+            transition: top 0.5s ease-in-out; 
+        }
+        #page-minigame #telegram-notification.show {
+            top: 50px; /* Animate to this position */
+        }
         #page-minigame .trade-info-card { background-color: #2c2c2e; border-radius: 0; padding: 12px; margin-bottom: 15px; }
         #page-minigame .info-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #3a3a3c; }
         #page-minigame .info-row:last-child { border-bottom: none; }
         #page-minigame .position-card { background-color: #2c2c2e; border-radius: 8px; padding: 12px; margin-bottom: 10px; font-size: 14px; }
         #page-minigame .close-trade-btn { background-color: #f59e0b; color: white; font-weight: bold; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+        
+        /* Generic App Modal */
+        #app-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 200;
+            /* display is controlled by JS, default is flex */
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body class="bg-gray-900">
 
     <!-- AUDIO SOURCES -->
     <audio id="trade-sound" src="https://c.mql4.com/book/sounds/ok.wav" preload="auto"></audio>
-    <!-- TODO: Add your notification sound URL to the src attribute below -->
-    <audio id="notification-sound" src="" preload="auto"></audio>
+    <audio id="notification-sound" src="https://cdn.freesound.org/previews/58/58719_28867-lq.mp3" preload="auto"></audio>
     <audio id="select-sound" src="https://cdn.freesound.org/previews/253/253887_4479031-lq.mp3" preload="auto"></audio>
     <audio id="win-sound" src="https://cdn.freesound.org/previews/341/341695_5121236-lq.mp3" preload="auto"></audio>
     <audio id="lose-sound" src="https://cdn.freesound.org/previews/442/442910_9312075-lq.mp3" preload="auto"></audio>
@@ -116,6 +139,17 @@
         <div class="splash-bg">
             <div class="gradient-blob blob-1"></div>
             <div class="gradient-blob blob-2"></div>
+        </div>
+        
+        <!-- ====== Generic App Modal ====== -->
+        <div id="app-modal-overlay" class="flex" style="display: none;">
+             <div id="app-modal" class="glass-effect p-6 rounded-2xl shadow-xl text-center w-11/12 max-w-sm" dir="rtl">
+                 <h2 id="app-modal-title" class="text-2xl font-bold mb-3 text-white"></h2>
+                 <p id="app-modal-message" class="text-gray-300 mb-6"></p>
+                 <div id="app-modal-buttons" class="flex flex-col gap-3">
+                     <button id="app-modal-close-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all">باشه</button>
+                 </div>
+             </div>
         </div>
 
         <!-- ====== Splash Screen ====== -->
@@ -207,7 +241,7 @@
             </div>
             <div id="telegram-notification" class="glass-effect p-3 rounded-2xl shadow-lg">
                 <div class="flex items-center">
-                    <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl text-white ml-3">
+                    <div class="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-2xl text-white ml-3 flex-shrink-0">
                         <i class="fa-solid fa-paper-plane"></i>
                     </div>
                     <div>
@@ -273,6 +307,14 @@
             const missionPathContainer = document.getElementById('mission-path');
             const dashboardTitle = document.getElementById('dashboard-title');
             
+            // --- App Modal ---
+            const appModalOverlay = document.getElementById('app-modal-overlay');
+            const appModalTitle = document.getElementById('app-modal-title');
+            const appModalMessage = document.getElementById('app-modal-message');
+            const appModalCloseBtn = document.getElementById('app-modal-close-btn');
+
+            let mediaUnlocked = false;
+            
             const initialState = {
                 currentPage: 'page-splash',
                 activeModule: null,
@@ -282,10 +324,9 @@
                     points: 0,
                 },
                 mainSteps: [
-                    // TODO: Replace placeholders with your desired icon URLs
-                    { id: 1, title: "آموزش سریع", module: "آموزش", status: 'unlocked', points: 50, iconUrl: "YOUR_ICON_URL_FOR_STEP_1" },
-                    { id: 2, title: "انجام ماموریت‌ها", module: "مینی‌گیم", status: 'locked', points: 100, iconUrl: "YOUR_ICON_URL_FOR_STEP_2" },
-                    { id: 3, title: "کسب درآمد", module: "کسب درآمد", status: 'locked', points: 0, iconUrl: "YOUR_ICON_URL_FOR_STEP_3" }
+                    { id: 1, title: "آموزش سریع", module: "آموزش", status: 'unlocked', points: 50, iconUrl: "https://i.ibb.co/bFkYJgJ/icons8-education-96.png", description: "اینجا کلا یه ربع کار داری" }, // اینجا لینک آیکون آموزش سریع را قرار دهید
+                    { id: 2, title: "تجربه ترید", module: "مینی‌گیم", status: 'locked', points: 100, iconUrl: "https://i.ibb.co/yQWzLqj/icons8-mission-96.png", description: "اینجا تست میکنی چقدر ترید بلدی" }, // اینجا لینک آیکون تجربه ترید را قرار دهید
+                    { id: 3, title: "کسب درآمد", module: "کسب درآمد", status: 'locked', points: 0, iconUrl: "https://i.ibb.co/M6Y9d7K/icons8-dollar-96.png", description: "بعد اینجا دیگه کارت تمومه" } // اینجا لینک آیکون کسب درآمد را قرار دهید
                 ],
                 missions: [
                     { id: 1, type: 'video', module: "آموزش", title: "ویدیو ۱: فارکس چیست؟", status: 'unlocked', thumbnail: 'https://placehold.co/600x400/3b82f6/ffffff?text=Video+1', points: 10 },
@@ -298,7 +339,8 @@
             // --- MINIGAME STATE & VARIABLES ---
             let minigame = {};
             const minigamePage = document.getElementById('page-minigame');
-            let minigameListenersAttached = false; 
+            const minigameEventHandlers = {};
+
 
             // --- PROFILE & LEVEL SYSTEM ---
             const levels = [
@@ -325,34 +367,14 @@
                 const profile = state.userProfile;
                 
                 const userNameElement = document.getElementById('profile-name');
-                if (userNameElement) {
-                    userNameElement.textContent = profile.name;
-                }
+                if (userNameElement) userNameElement.textContent = profile.name;
 
                 const userAvatarElement = document.getElementById('profile-avatar');
                 if (userAvatarElement) {
                     if (profile.avatar && profile.avatar.startsWith('http')) {
-                        if (userAvatarElement.tagName !== 'IMG') {
-                            const newImg = document.createElement('img');
-                            newImg.id = 'profile-avatar';
-                            newImg.alt = 'آواتار کاربر';
-                            newImg.className = 'w-16 h-16 rounded-full border-2 border-purple-400 ml-4';
-                            userAvatarElement.parentElement.replaceChild(newImg, userAvatarElement);
-                            newImg.src = profile.avatar;
-                        } else {
-                            userAvatarElement.src = profile.avatar;
-                        }
+                        userAvatarElement.src = profile.avatar;
                     } else {
-                        const initial = (profile.name || 'U').charAt(0).toUpperCase();
-                        if (userAvatarElement.tagName !== 'DIV') {
-                            const newDiv = document.createElement('div');
-                            newDiv.id = 'profile-avatar';
-                            newDiv.className = 'w-16 h-16 rounded-full border-2 border-purple-400 ml-4 flex items-center justify-center bg-purple-600 text-white font-bold text-2xl';
-                            userAvatarElement.parentElement.replaceChild(newDiv, userAvatarElement);
-                            newDiv.textContent = initial;
-                        } else {
-                            userAvatarElement.textContent = initial;
-                        }
+                        userAvatarElement.src = `https://placehold.co/64x64/8b5cf6/ffffff?text=${(profile.name || 'U').charAt(0).toUpperCase()}`;
                     }
                 }
 
@@ -372,11 +394,12 @@
                     if (window.Telegram && window.Telegram.WebApp) {
                         const tg = window.Telegram.WebApp;
                         tg.ready();
+                        tg.expand();
                         const user = tg.initDataUnsafe.user;
 
                         if (user) {
-                            const fullName = `${user.first_name} ${user.last_name || ''}`.trim();
-                            state.userProfile.name = fullName || 'کاربر مهمان';
+                            const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+                            state.userProfile.name = fullName || 'کاربر تلگرام';
                             state.userProfile.avatar = user.photo_url; 
                         }
                     }
@@ -401,9 +424,9 @@
                         state = { ...JSON.parse(JSON.stringify(initialState)), ...parsedState };
                         state.userProfile = mergedProfile;
 
-                        state.mainSteps = initialState.mainSteps.map(is => {
-                            const savedStep = parsedState.mainSteps ? parsedState.mainSteps.find(ss => ss.id === is.id) : null;
-                            return savedStep ? { ...is, status: savedStep.status } : is;
+                        state.mainSteps = initialState.mainSteps.map(initialStep => {
+                            const savedStep = parsedState.mainSteps ? parsedState.mainSteps.find(ss => ss.id === initialStep.id) : null;
+                            return savedStep ? { ...initialStep, status: savedStep.status } : initialStep;
                         });
                         state.currentPage = 'page-splash';
                     } else {
@@ -428,13 +451,14 @@
                 pages.forEach(page => page.classList.toggle('hidden', page.id !== pageId));
 
                 if (pageId === 'page-video') {
-                    introVideo.play().catch(e => {});
+                    if(mediaUnlocked) introVideo.play().catch(e => {console.warn("Video autoplay blocked")});
                 } else if (pageId === 'page-minigame') {
                     initMinigame();
                 } else if (pageId === 'page-steps') {
                     updateProfileUI();
                     renderStepsPage();
                 }
+                saveState();
             }
             
             function renderStepsPage() {
@@ -458,7 +482,7 @@
                         </div>
                         <div class="flex-grow">
                             <h3 class="font-bold text-lg text-white">${step.id}. ${step.title}</h3>
-                            <p class="text-sm text-gray-400">${isCompleted ? 'تکمیل شد' : isLocked ? 'قفل است' : 'شروع کنید'}</p>
+                            <p class="text-sm text-gray-400">${step.description}</p>
                         </div>
                         <div class="w-8 h-8 flex items-center justify-center flex-shrink-0">
                             ${statusIcon}
@@ -475,7 +499,7 @@
                         const isCompleted = mission.status === 'completed';
                         const isLocked = mission.status === 'locked';
                         const missionElement = document.createElement('div');
-                        missionElement.className = `relative rounded-2xl overflow-hidden glass-effect transition-all ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'}`;
+                        missionElement.className = `relative mb-4 rounded-2xl overflow-hidden glass-effect transition-all ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'}`;
                         missionElement.innerHTML = `<img src="${mission.thumbnail}" class="w-full h-32 object-cover" alt="${mission.title}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e293b/ffffff?text=Video';"><div class="p-3"><h4 class="font-bold text-white">${mission.title}</h4><button data-mission-id="${mission.id}" class="watch-btn mt-2 text-sm font-bold py-1 px-3 rounded-lg ${isCompleted ? 'bg-green-500' : 'bg-blue-500'} text-white" ${isLocked || isCompleted ? 'disabled' : ''}>${isCompleted ? '✓ مشاهده شد' : 'مشاهده کردم'}</button></div>`;
                         missionPathContainer.appendChild(missionElement);
                     });
@@ -484,13 +508,45 @@
                 }
             }
             
+            // --- GENERIC MODAL FUNCTIONS ---
+            function showAppModal(title, message) {
+                appModalTitle.textContent = title;
+                appModalMessage.textContent = message;
+                appModalOverlay.style.display = 'flex';
+            }
+            appModalCloseBtn.addEventListener('click', () => {
+                appModalOverlay.style.display = 'none';
+            });
+
+            // --- MEDIA UNLOCK ---
+            function unlockMediaPlayback() {
+                if (mediaUnlocked) return;
+                console.log('Unlocking media playback...');
+                const audioElements = document.querySelectorAll('audio');
+                audioElements.forEach(audio => {
+                    audio.play().then(() => audio.pause()).catch(() => {});
+                });
+                mediaUnlocked = true;
+            }
+
             // --- MAIN APP EVENT LISTENERS ---
-            startBtn.addEventListener('click', () => navigateTo('page-video'));
-            continueFromVideoBtn.addEventListener('click', () => { navigateTo('page-steps'); });
-            backToStepsBtn.addEventListener('click', () => { navigateTo('page-steps'); });
+            startBtn.addEventListener('click', () => {
+                unlockMediaPlayback();
+                navigateTo('page-video');
+            });
+            continueFromVideoBtn.addEventListener('click', () => navigateTo('page-steps'));
+            backToStepsBtn.addEventListener('click', () => navigateTo('page-steps'));
+            
             stepsContainer.addEventListener('click', (e) => {
-                const stepElement = e.target.closest('[data-module]:not(.locked)');
+                const stepElement = e.target.closest('[data-module]');
                 if (!stepElement) return;
+
+                const isLocked = stepElement.classList.contains('locked');
+                if (isLocked) {
+                    showAppModal('مرحله قفل است', 'برای باز کردن این مرحله، ابتدا باید مراحل قبلی را تکمیل کنید.');
+                    return;
+                }
+
                 const module = stepElement.dataset.module;
                 state.activeModule = module;
                 if (module === 'آموزش') {
@@ -499,8 +555,11 @@
                     navigateTo('page-dashboard');
                 } else if (module === 'مینی‌گیم') {
                     navigateTo('page-minigame');
+                } else if (module === 'کسب درآمد') {
+                    showAppModal('به زودی...', 'این بخش در حال آماده‌سازی است و به زودی در دسترس شما قرار خواهد گرفت.');
                 }
             });
+
             missionPathContainer.addEventListener('click', (e) => {
                 if (e.target.classList.contains('watch-btn')) {
                     const missionId = parseInt(e.target.dataset.missionId);
@@ -531,32 +590,32 @@
 
             // --- MINIGAME MAIN FUNCTION ---
             function initMinigame(restartCapital = null) {
-                // --- MINIGAME HELPER FUNCTIONS (Defined inside initMinigame to create a closure) ---
-                const showNotification = (title, text) => {
-                    const notificationEl = minigamePage.querySelector('#telegram-notification');
-                    minigamePage.querySelector('#notification-title').textContent = title;
-                    minigamePage.querySelector('#notification-text').textContent = text;
-                    notificationEl.style.top = '50px';
-                    // TODO: To enable sound, add your sound URL to the <audio> tag with id="notification-sound" and uncomment the line below.
-                    // document.getElementById('notification-sound').play().catch(e => console.error("Notification sound failed:", e));
-                    setTimeout(() => { notificationEl.style.top = '-120px'; }, 5000);
+                // *** MODIFIED: Reset UI to default state at the very beginning ***
+                minigamePage.querySelector('#chart-view').classList.remove('hidden');
+                minigamePage.querySelector('#trade-view').classList.add('hidden');
+                minigamePage.querySelectorAll('.footer-item').forEach(item => item.classList.remove('active'));
+                minigamePage.querySelector('.footer-item[data-view="chart"]').classList.add('active');
+
+                const showNotification = (title = 'سیگنال خرید طلا!', text = 'فرصت خرید! همین الان بخر!') => {
+                    if (minigame && minigame.hasEnteredTrade) return;
+                    try {
+                        const notificationEl = minigamePage.querySelector('#telegram-notification');
+                        minigamePage.querySelector('#notification-title').textContent = title;
+                        minigamePage.querySelector('#notification-text').textContent = text;
+                        
+                        notificationEl.classList.add('show');
+                        
+                        setTimeout(() => {
+                            notificationEl.classList.remove('show');
+                        }, 5000);
+                    } catch (error) {
+                        console.error("!!! FAILED TO EXECUTE NOTIFICATION !!!", error);
+                    }
                 };
                 
-                const startSignalSequence = () => {
-                    showNotification('سیگنال خرید طلا!', 'فرصت خرید! همین الان بخر!');
-                    minigame.signalAction = 'pending';
-                    minigame.reminderInterval = setInterval(() => {
-                        if (minigame.signalAction === 'pending' && minigame.account.openPositions.length === 0) {
-                            showNotification('یادآوری سیگنال خرید!', 'فرصت خرید طلا را از دست نده!');
-                        } else {
-                            clearInterval(minigame.reminderInterval);
-                        }
-                    }, 10000);
-                };
-
                 const showModal = (title, message, buttons) => {
                     minigamePage.querySelector('#modal-title').textContent = title;
-                    minigamePage.querySelector('#modal-message').textContent = message;
+                    minigamePage.querySelector('#modal-message').innerHTML = message;
                     const buttonsContainer = minigamePage.querySelector('#modal-buttons');
                     buttonsContainer.innerHTML = '';
                     buttons.forEach(btnInfo => {
@@ -591,6 +650,26 @@
                         listElement.appendChild(card);
                     });
                 };
+                
+                // *** MODIFIED: Added logic to unlock next step on failure ***
+                const completeMinigameStep = (success) => {
+                    const mainStep = state.mainSteps.find(s => s.module === 'مینی‌گیم');
+                    if (success) {
+                        if (mainStep) {
+                            mainStep.status = 'completed';
+                            addPoints(mainStep.points || 100);
+                        }
+                    }
+                    // Always unlock the next step, regardless of success or failure
+                    if (mainStep) {
+                        const nextStep = state.mainSteps.find(s => s.id === mainStep.id + 1);
+                        if (nextStep) {
+                            nextStep.status = 'unlocked';
+                        }
+                    }
+                    saveState();
+                    navigateTo('page-steps');
+                };
 
                 const closeTrade = (tradeId, reason = 'manual') => {
                     if (minigame.autoCloseTimer) clearTimeout(minigame.autoCloseTimer);
@@ -604,26 +683,34 @@
                         renderPositionsList();
                         updateTradeInfoUI();
                         
-                        if (minigame.signalAction === 'followed') {
-                            document.getElementById('win-sound').play().catch(()=>{});
+                        document.getElementById(trade.pnl >= 0 ? 'win-sound' : 'lose-sound').play().catch(()=>{});
+
+                        const wasSignalIgnored = minigame.signalAction === 'ignored';
+                        const wasSignalFollowed = minigame.signalAction === 'followed';
+
+                        if (wasSignalIgnored) {
+                            const loseMessage = `شما مبلغ <span class="font-bold text-red-400">${Math.abs(trade.pnl).toFixed(2)}$</span> ضرر کردید.<br><br>این اتفاق به دلیل توجه نکردن به سیگنال رخ داد. اگر این روند را ادامه دهید، ممکن است خیلی زود تمام سرمایه خود را از دست بدهید.`;
+                            showModal('آزمون ناموفق بود!', loseMessage, [
+                                { 
+                                    text: 'امتحان مجدد', 
+                                    class: 'w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg', 
+                                    callback: () => { 
+                                        navigateTo('page-minigame');
+                                    } 
+                                },
+                                { 
+                                    text: 'رد کردن', 
+                                    class: 'w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg', 
+                                    callback: () => completeMinigameStep(false) 
+                                }
+                            ]);
+                        } else if (wasSignalFollowed) {
                             confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
                             const winMessage = `شما با پیروی از سیگنال ${trade.pnl.toFixed(2)}$ سود کردید! این سود می‌توانست واقعی باشد. تا رسیدن به سود واقعی فقط یک قدم مانده.`;
                             showModal('تبریک! آزمون را با موفقیت گذراندید!', winMessage, [{ text: 'ادامه', callback: () => completeMinigameStep(true) }]);
-                        } else if (minigame.signalAction === 'ignored') {
-                            document.getElementById('lose-sound').play().catch(()=>{});
-                            const loseMessage = `شما به سیگنال توجه نکردید و ${Math.abs(trade.pnl).toFixed(2)}$ ضرر کردید. تکرار این کار می‌تواند به سرعت سرمایه شما را از بین ببرد.`;
-                            const capitalForRestart = minigame.initialCapital;
-                            showModal('آزمون ناموفق بود!', loseMessage, [
-                                { text: 'تلاش مجدد', class: 'w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg', callback: () => { 
-                                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                                    cleanupMinigame(); 
-                                    initMinigame(capitalForRestart); 
-                                } },
-                                { text: 'رد کردن مرحله', class: 'w-full bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg', callback: () => completeMinigameStep(false) }
-                            ]);
                         } else {
-                             const resultText = trade.pnl >= 0 ? `شما این معامله را با سود ${trade.pnl.toFixed(2)}$ بستید.` : `شما این معامله را با ضرر ${trade.pnl.toFixed(2)}$ بستید.`;
-                             showModal('معامله بسته شد', resultText, [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
+                            const resultText = trade.pnl >= 0 ? `شما این معامله را با سود ${trade.pnl.toFixed(2)}$ بستید.` : `شما این معامله را با ضرر ${Math.abs(trade.pnl).toFixed(2)}$ بستید.`;
+                            showModal('معامله بسته شد', resultText, [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
                         }
                     }
                 };
@@ -638,20 +725,20 @@
                         showModal('خطا', 'شما در حال حاضر یک معامله باز دارید. ابتدا آن را ببندید.', [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
                         return;
                     }
-                    if (minigame.signalAction === 'none') {
+                    if (minigame.signalAction !== 'pending') {
                         showModal('کمی صبر کنید', 'بهتره برای ورود به معامله منتظر سیگنال بمانی.', [{ text: 'متوجه شدم', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
                         return;
                     }
-                    if (minigame.isTutorialActive || !minigame.lastCandleData) return;
-                    if (minigame.signalAction === 'pending') {
-                        clearInterval(minigame.reminderInterval);
-                        minigame.chartMode = 'bullish';
-                        if (type === 'buy') {
-                            minigame.signalAction = 'followed';
-                        } else {
-                            minigame.signalAction = 'ignored';
-                        }
+                    
+                    minigame.hasEnteredTrade = true;
+                    clearInterval(minigame.reminderInterval);
+                    minigame.chartMode = 'bullish';
+                    if (type === 'buy') {
+                        minigame.signalAction = 'followed';
+                    } else { 
+                        minigame.signalAction = 'ignored';
                     }
+                    
                     document.getElementById('trade-sound').play().catch(e => {});
                     const lotSize = parseFloat(minigamePage.querySelector('#lot-size-input').value);
                     const entryPrice = minigame.lastCandleData.close;
@@ -677,6 +764,13 @@
                     if (minigame.currentView === 'trade') { renderPositionsList(); }
                 };
 
+                const gameLoop = () => {
+                    const newCandle = generateCandle(minigame.lastCandleData.close);
+                    minigame.candleSeries.update(newCandle);
+                    minigame.lastCandleData = newCandle;
+                    updatePnl();
+                };
+
                 const generateCandle = (lastClose) => {
                     const now = new Date();
                     const time = Math.floor(now.getTime() / 60000) * 60000;
@@ -687,11 +781,11 @@
                         if (minigame.chartMode === 'bullish') {
                             movement = (minigame.bullishState.pullbackCandles > 0) ? -Math.random() * 0.8 : (Math.random() * 1.5 + 0.2);
                             if(minigame.bullishState.pullbackCandles > 0) minigame.bullishState.pullbackCandles--; else minigame.bullishState.greenCandles++;
-                            if(minigame.bullishState.greenCandles > 3 && Math.random() < 0.4) minigame.bullishState.pullbackCandles = Math.random() > 0.5 ? 2 : 1;
+                            if(minigame.bullishState.greenCandles > 3 && Math.random() < 0.4) { minigame.bullishState.pullbackCandles = Math.random() > 0.5 ? 2 : 1; minigame.bullishState.greenCandles = 0; }
                         } else if (minigame.chartMode === 'bearish') {
                             movement = (minigame.bearishState.pullbackCandles > 0) ? Math.random() * 0.8 : -(Math.random() * 1.5 + 0.2);
                             if(minigame.bearishState.pullbackCandles > 0) minigame.bearishState.pullbackCandles--; else minigame.bearishState.redCandles++;
-                            if(minigame.bearishState.redCandles > 3 && Math.random() < 0.4) minigame.bearishState.pullbackCandles = Math.random() > 0.5 ? 2 : 1;
+                            if(minigame.bearishState.redCandles > 3 && Math.random() < 0.4) { minigame.bearishState.pullbackCandles = Math.random() > 0.5 ? 2 : 1; minigame.bearishState.redCandles = 0; }
                         } else { movement = (Math.random() - 0.5) * 2; }
                         close = open + movement;
                         high = Math.max(open, close) + Math.random() * 0.5;
@@ -707,31 +801,26 @@
                     }
                 };
 
-                const runTutorialStep = (stepIndex, stepsArray) => {
-                    const tutorialSteps = [
-                        { type: 'modal', title: 'راهنمای قیمت', text: 'قیمت فعلی نماد را می‌توانید در محور عمودی در سمت راست چارت مشاهده کنید.' },
-                        { type: 'highlight', selector: '#buy-button', text: 'با زدن این دکمه، یک معامله خرید (BUY) باز می‌کنید. اگر قیمت بالا برود، سود می‌کنید.' },
-                        { type: 'highlight', selector: '#sell-button', text: 'با زدن این دکمه، یک معامله فروش (SELL) باز می‌کنید. اگر قیمت پایین بیاید، سود می‌کنید.' },
-                        { type: 'highlight', selector: '.lot-control', text: 'در اینجا می‌توانید حجم معامله خود را تعیین کنید. حجم بیشتر یعنی سود یا زیان بیشتر!' },
-                    ];
-                    stepsArray = stepsArray || tutorialSteps;
-                    minigame.tutorialStep = stepIndex;
+                const runTutorialStep = (stepIndex, stepsArray, onCompleteCallback) => {
                     if (stepIndex >= stepsArray.length) {
-                        if (stepsArray === tutorialSteps) endInitialTutorial();
-                        else endTradeTutorial();
+                        if(onCompleteCallback) onCompleteCallback();
                         return;
                     }
+
                     const step = stepsArray[stepIndex];
+                    const nextBtn = minigamePage.querySelector('#tutorial-next-btn');
+                    
+                    nextBtn.onclick = () => runTutorialStep(stepIndex + 1, stepsArray, onCompleteCallback);
+
                     if (step.type === 'modal') {
                         showModal(step.title, step.text, [{ text: 'فهمیدم، بعدی', callback: () => {
                             minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                            runTutorialStep(stepIndex + 1, stepsArray);
+                            runTutorialStep(stepIndex + 1, stepsArray, onCompleteCallback);
                         }}]);
                     } else if (step.type === 'highlight') {
                         const targetElement = minigamePage.querySelector(step.selector);
                         if (!targetElement) { 
-                            if (stepsArray === tutorialSteps) endInitialTutorial();
-                            else endTradeTutorial();
+                            if(onCompleteCallback) onCompleteCallback();
                             return; 
                         }
                         minigamePage.querySelector('#modal-overlay').classList.remove('hidden');
@@ -745,26 +834,28 @@
                         tutorialTip.style.top = `${rect.bottom - phoneRect.top + 15}px`;
                         tutorialTip.style.left = '50%';
                         tutorialTip.style.transform = 'translateX(-50%)';
-                        minigamePage.querySelector('#tutorial-next-btn').onclick = () => runTutorialStep(stepIndex + 1, stepsArray);
-                        minigamePage.querySelector('#tutorial-next-btn').textContent = 'بعدی';
+                        nextBtn.textContent = 'بعدی';
                     }
                 };
                 
-                const endInitialTutorial = () => {
-                    minigame.isTutorialActive = false;
-                    const overlay = minigamePage.querySelector('#modal-overlay');
-                    overlay.classList.add('hidden');
-                    overlay.style.clipPath = '';
+                const cleanupAllTutorials = () => {
+                    const modalOverlay = minigamePage.querySelector('#modal-overlay');
+                    modalOverlay.classList.add('hidden');
+                    modalOverlay.style.clipPath = '';
                     minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
-                    setTimeout(startSignalSequence, 4000);
-                };
+                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
+                }
 
-                const endTradeTutorial = () => {
-                    minigame.isTutorialActive = false;
-                    const overlay = minigamePage.querySelector('#modal-overlay');
-                    overlay.classList.add('hidden');
-                    overlay.style.clipPath = '';
-                    minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
+                const endInitialTutorial = () => {
+                    cleanupAllTutorials();
+                    showNotification('سیگنال خرید طلا!', 'فرصت خرید! همین الان بخر!');
+                    minigame.signalAction = 'pending';
+                    
+                    minigame.reminderInterval = setInterval(() => {
+                        if (minigame.account.openPositions.length === 0) {
+                            showNotification('جا نمونی!', 'فرصت خرید طلا داره از دست میره ها!');
+                        }
+                    }, 15000); 
                 };
                 
                 const triggerTradeTabTutorial = () => {
@@ -774,37 +865,31 @@
                         { type: 'highlight', selector: '#equity-info', text: 'این سرمایه شناور شماست که با سود و زیان معاملات باز تغییر می‌کند.'},
                         { type: 'highlight', selector: '#pnl-info', text: 'اینجا می‌توانید سود یا زیان کل معاملات باز خود را مشاهده کنید.'},
                     ];
-                    minigame.isTutorialActive = true;
                     showModal('بخش معاملات (Trade)', 'در این بخش می‌توانید تمام معاملات باز خود را مدیریت کرده و سود و زیان لحظه‌ای را مشاهده کنید.', [
                         { text: 'برو به بخش ترید', callback: () => {
-                            switchMinigameView('trade');
                             minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                            setTimeout(() => runTutorialStep(0, tradeTutorialSteps), 500);
+                            switchMinigameView('trade');
+                            setTimeout(() => runTutorialStep(0, tradeTutorialSteps, cleanupAllTutorials), 500);
                         }}
                     ]);
                 };
 
                 const switchMinigameView = (view) => {
-                    // Fail-safe to ensure tutorial overlays are hidden when navigating
-                    const overlay = minigamePage.querySelector('#modal-overlay');
-                    overlay.classList.add('hidden');
-                    overlay.style.clipPath = '';
-                    minigamePage.querySelector('#tutorial-tip').classList.add('hidden');
+                    cleanupAllTutorials();
 
                     if (view === 'chart' || view === 'trade') {
                         minigame.currentView = view;
                         minigamePage.querySelector('#chart-view').classList.toggle('hidden', view !== 'chart');
                         minigamePage.querySelector('#trade-view').classList.toggle('hidden', view !== 'trade');
                         
-                        const activeFooterItem = minigamePage.querySelector('.footer-item.active');
-                        if (activeFooterItem) activeFooterItem.classList.remove('active');
+                        minigamePage.querySelectorAll('.footer-item').forEach(item => item.classList.remove('active'));
                         
                         const newActiveFooterItem = minigamePage.querySelector(`.footer-item[data-view="${view}"]`);
                         if (newActiveFooterItem) newActiveFooterItem.classList.add('active');
 
-                        if (view === 'trade') {
-                            renderPositionsList();
-                        }
+                        if (view === 'trade') renderPositionsList();
+                    } else {
+                        showModal('در حال ساخت', 'این بخش به زودی آماده می‌شود!', [{ text: 'باشه', callback: () => minigamePage.querySelector('#minigame-overlay').classList.add('hidden') }]);
                     }
                 };
 
@@ -812,13 +897,13 @@
                 minigame = {
                     chart: null, candleSeries: null, 
                     account: { balance: 0, equity: 0, openPositions: [] },
-                    currentView: 'chart', lastCandleData: null, tradeIdCounter: 0, tutorialStep: 0,
+                    currentView: 'chart', lastCandleData: null, tradeIdCounter: 0,
                     chartMode: 'random', signalAction: 'none',
                     bullishState: { greenCandles: 0, pullbackCandles: 0 },
                     bearishState: { redCandles: 0, pullbackCandles: 0 },
                     hasOpenedFirstTrade: false,
-                    dataInterval: null, resizeObserver: null, isFinished: false,
-                    isTutorialActive: restartCapital === null,
+                    hasEnteredTrade: false,
+                    dataInterval: null, resizeObserver: null,
                     autoCloseTimer: null,
                     reminderInterval: null,
                     initialCapital: restartCapital || 0,
@@ -828,65 +913,54 @@
                 minigame.chart = LightweightCharts.createChart(chartContainer, { width: chartContainer.clientWidth, height: chartContainer.clientHeight, layout: { background: { type: 'solid', color: '#1c1c1e' }, textColor: 'rgba(255, 255, 255, 0.9)', bottomMargin: 60 }, grid: { vertLines: { color: '#2a2e39' }, horzLines: { color: '#2a2e39' } }, crosshair: { mode: LightweightCharts.CrosshairMode.Normal }, rightPriceScale: { borderColor: 'rgba(197, 203, 206, 0.6)' }, timeScale: { borderColor: 'rgba(197, 203, 206, 0.6)', timeVisible: true, secondsVisible: false } });
                 minigame.candleSeries = minigame.chart.addCandlestickSeries({ upColor: '#26a69a', downColor: '#ef5350', borderDownColor: '#ef5350', borderUpColor: '#26a69a', wickDownColor: '#ef5350', wickUpColor: '#26a69a' });
 
-                if (!minigameListenersAttached) {
-                    minigamePage.querySelectorAll('.capital-btn').forEach(button => button.onclick = () => {
-                        document.getElementById('select-sound').play().catch(() => {});
-                        const amount = parseFloat(button.dataset.amount);
-                        minigame.account.balance = amount;
-                        minigame.account.equity = amount;
-                        minigame.initialCapital = amount;
+                // --- Attaching Event Listeners ---
+                minigameEventHandlers.handleCapitalSelect = (e) => {
+                    document.getElementById('select-sound').play().catch(() => {});
+                    const amount = parseFloat(e.currentTarget.dataset.amount);
+                    minigame.account.balance = amount;
+                    minigame.account.equity = amount;
+                    minigame.initialCapital = amount;
 
-                        const lotSizeInput = minigamePage.querySelector('#lot-size-input');
-                        if (amount < 500) lotSizeInput.value = '0.01';
-                        else if (amount < 1000) lotSizeInput.value = '0.05';
-                        else if (amount < 10000) lotSizeInput.value = '0.10';
-                        else lotSizeInput.value = '1.00';
-
-                        updateTradeInfoUI();
-                        minigamePage.querySelector('#modal-container').classList.add('hidden');
-                        
-                        if (minigame.isTutorialActive) {
-                            setTimeout(() => runTutorialStep(0, null), 1000); // Shortened delay
-                        } else {
-                            setTimeout(startSignalSequence, 1000);
-                        }
-                    });
-
-                    minigamePage.querySelector('.app-footer').addEventListener('click', (e) => {
-                        const targetItem = e.target.closest('.footer-item');
-                        if (targetItem && targetItem.dataset.view) {
-                            switchMinigameView(targetItem.dataset.view);
-                        }
-                    });
-
-                    minigamePage.querySelector('#buy-button').onclick = () => openTrade('buy');
-                    minigamePage.querySelector('#sell-button').onclick = () => openTrade('sell');
-                    minigamePage.querySelector('#lot-up').onclick = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) + 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
-                    minigamePage.querySelector('#lot-down').onclick = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) - 0.01; if (v < 0.01) v = 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
-                    minigamePage.querySelector('#minigame-back-btn').onclick = () => navigateTo('page-steps');
-                    
-                    minigameListenersAttached = true;
-                }
-
-                if (restartCapital !== null) {
-                    minigame.account.balance = restartCapital;
-                    minigame.account.equity = restartCapital;
-                    
                     const lotSizeInput = minigamePage.querySelector('#lot-size-input');
-                    if (restartCapital < 500) lotSizeInput.value = '0.01';
-                    else if (restartCapital < 1000) lotSizeInput.value = '0.05';
-                    else if (restartCapital < 10000) lotSizeInput.value = '0.10';
+                    if (amount < 500) lotSizeInput.value = '0.01';
+                    else if (amount < 1000) lotSizeInput.value = '0.05';
+                    else if (amount < 10000) lotSizeInput.value = '0.10';
                     else lotSizeInput.value = '1.00';
 
                     updateTradeInfoUI();
                     minigamePage.querySelector('#modal-container').classList.add('hidden');
-                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                    switchMinigameView('chart');
-                    setTimeout(startSignalSequence, 2000);
-                } else {
-                    minigamePage.querySelector('#modal-container').classList.remove('hidden');
-                    minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
-                }
+                    
+                    const initialTutorialSteps = [
+                        { type: 'modal', title: 'راهنمای قیمت', text: 'قیمت فعلی نماد را می‌توانید در محور عمودی در سمت راست چارت مشاهده کنید.' },
+                        { type: 'highlight', selector: '#buy-button', text: 'با زدن این دکمه، یک معامله خرید (BUY) باز می‌کنید. اگر قیمت بالا برود، سود می‌کنید.' },
+                        { type: 'highlight', selector: '#sell-button', text: 'با زدن این دکمه، یک معامله فروش (SELL) باز می‌کنید. اگر قیمت پایین بیاید، سود می‌کنید.' },
+                        { type: 'highlight', selector: '.lot-control', text: 'در اینجا می‌توانید حجم معامله خود را تعیین کنید. حجم بیشتر یعنی سود یا زیان بیشتر!' },
+                    ];
+                    runTutorialStep(0, initialTutorialSteps, endInitialTutorial);
+                };
+                
+                minigameEventHandlers.handleFooterClick = (e) => {
+                    const targetItem = e.target.closest('.footer-item');
+                    if (targetItem && targetItem.dataset.view) switchMinigameView(targetItem.dataset.view);
+                };
+                
+                minigameEventHandlers.handleLotUp = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) + 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
+                minigameEventHandlers.handleLotDown = () => { let v = parseFloat(minigamePage.querySelector('#lot-size-input').value) - 0.01; if (v < 0.01) v = 0.01; minigamePage.querySelector('#lot-size-input').value = v.toFixed(2); };
+                
+                minigameEventHandlers.handleBuy = () => openTrade('buy');
+                minigameEventHandlers.handleSell = () => openTrade('sell');
+
+                minigamePage.querySelectorAll('.capital-btn').forEach(button => button.addEventListener('click', minigameEventHandlers.handleCapitalSelect));
+                minigamePage.querySelector('.app-footer').addEventListener('click', minigameEventHandlers.handleFooterClick);
+                minigamePage.querySelector('#buy-button').addEventListener('click', minigameEventHandlers.handleBuy);
+                minigamePage.querySelector('#sell-button').addEventListener('click', minigameEventHandlers.handleSell);
+                minigamePage.querySelector('#lot-up').addEventListener('click', minigameEventHandlers.handleLotUp);
+                minigamePage.querySelector('#lot-down').addEventListener('click', minigameEventHandlers.handleLotDown);
+                minigamePage.querySelector('#minigame-back-btn').addEventListener('click', () => navigateTo('page-steps'));
+
+                // --- Initial State Logic ---
+                minigamePage.querySelector('#modal-container').classList.remove('hidden');
+                minigamePage.querySelector('#minigame-overlay').classList.add('hidden');
                 
                 let currentPrice = 2330;
                 const initialData = [];
@@ -899,17 +973,12 @@
                     initialData.push({ time, open, high: Math.max(open, close) + Math.random(), low: Math.min(open, close) - Math.random(), close });
                 }
                 minigame.candleSeries.setData(initialData);
+                minigame.lastCandleData = initialData[initialData.length - 1];
 
-                minigame.dataInterval = setInterval(() => {
-                    const newCandle = generateCandle(currentPrice);
-                    minigame.candleSeries.update(newCandle);
-                    minigame.lastCandleData = newCandle;
-                    currentPrice = newCandle.close;
-                    updatePnl();
-                }, 1000);
+                minigame.dataInterval = setInterval(gameLoop, 1000);
 
                 minigame.resizeObserver = new ResizeObserver(() => {
-                    if (minigame.chart) {
+                    if (minigame.chart && chartContainer.clientWidth > 0) {
                         minigame.chart.resize(chartContainer.clientWidth, chartContainer.clientHeight)
                     }
                 });
@@ -922,12 +991,28 @@
                 if (minigame.chart) { minigame.chart.remove(); minigame.chart = null; }
                 if (minigame.autoCloseTimer) clearTimeout(minigame.autoCloseTimer);
                 if (minigame.reminderInterval) clearInterval(minigame.reminderInterval);
+                
+                // --- Detaching Event Listeners to prevent memory leaks ---
+                minigamePage.querySelectorAll('.capital-btn').forEach(button => button.removeEventListener('click', minigameEventHandlers.handleCapitalSelect));
+                const footer = minigamePage.querySelector('.app-footer');
+                if (footer) footer.removeEventListener('click', minigameEventHandlers.handleFooterClick);
+                const lotUp = minigamePage.querySelector('#lot-up');
+                if(lotUp) lotUp.removeEventListener('click', minigameEventHandlers.handleLotUp);
+                const lotDown = minigamePage.querySelector('#lot-down');
+                if(lotDown) lotDown.removeEventListener('click', minigameEventHandlers.handleLotDown);
+                
+                const buyBtn = minigamePage.querySelector('#buy-button');
+                if(buyBtn) buyBtn.removeEventListener('click', minigameEventHandlers.handleBuy);
+                const sellBtn = minigamePage.querySelector('#sell-button');
+                if(sellBtn) sellBtn.removeEventListener('click', minigameEventHandlers.handleSell);
+
+                minigame = {}; // Clear the state
             }
             
             // --- APP INITIALIZATION ---
             loadState();
             initTelegramData();
-            navigateTo(state.currentPage);
+            navigateTo('page-splash'); 
         });
     </script>
 </body>
